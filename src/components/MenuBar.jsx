@@ -1,105 +1,154 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Terminal, PlusCircle, Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Terminal, Plus, Github, Menu, X, Sparkles, Layers } from 'lucide-react';
 
-const MenuBar = () => {
+export default function MenuBar({ onOpenSubmit, toolCount = 128 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { scrollY } = useScroll();
-  const opacity = useTransform(scrollY, [0, 50], [0, 1]);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: 'SYSTEMS', href: '#systems' },
-    { name: 'STACKS', href: '#stacks' },
-    { name: 'PROTOCOL', href: '#newsletter' },
-  ];
-
   return (
     <>
-      <motion.nav 
-        className={`fixed top-0 left-0 w-full z-50 px-6 py-4 transition-all duration-300 border-b ${isScrolled ? 'bg-black/80 backdrop-blur-md border-neon-cyan/20' : 'bg-transparent border-transparent'}`}
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-[#09090b]/85 backdrop-blur-xl border-b border-white/[0.08] shadow-2xl shadow-black/60'
+            : 'bg-transparent border-b border-transparent'
+        }`}
       >
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          {/* Logo */}
-          <a href="#" className="flex items-center gap-2 group">
-            <Terminal size={24} className="text-neon-cyan group-hover:text-neon-pink transition-colors" />
-            <span className="font-orbitron font-bold text-white text-lg tracking-widest hidden md:inline group-hover:text-neon-cyan transition-colors">
-              LETSVIBECODE
-            </span>
-          </a>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a 
-                key={link.name}
-                href={link.href}
-                className="text-xs font-mono text-gray-400 hover:text-white hover:tracking-widest transition-all duration-300 relative group"
-              >
-                {link.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-neon-cyan group-hover:w-full transition-all duration-300" />
-              </a>
-            ))}
-          </div>
-
-          {/* Actions */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          {/* Logo & Brand */}
           <div className="flex items-center gap-4">
-            <a 
-                href="mailto:submit@letsvibecode.com" 
-                className="hidden md:flex items-center gap-2 bg-neon-pink/10 border border-neon-pink text-neon-pink px-4 py-2 text-xs font-bold hover:bg-neon-pink hover:text-white transition-all"
-                style={{ clipPath: 'polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px)' }}
-            >
-                <PlusCircle size={14} /> SUBMIT TOOL
+            <a href="#" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-105 group-hover:border-cyan-400/60 transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                <Terminal size={18} strokeWidth={2.2} />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-sm tracking-tight text-white group-hover:text-cyan-300 transition-colors">
+                  LET'S VIBE CODE
+                </span>
+                <span className="text-[10px] font-mono text-zinc-500 tracking-wider uppercase -mt-0.5">
+                  AI Directory v2.0
+                </span>
+              </div>
             </a>
 
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden text-white"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            {/* Live Tool Count Pill */}
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-zinc-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-zinc-200 font-semibold">{toolCount}</span> tools curated
+            </div>
+          </div>
+
+          {/* Center Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-zinc-400">
+            <a
+              href="#tools"
+              className="hover:text-white transition-colors py-1 hover:border-b hover:border-cyan-400"
             >
-              {mobileMenuOpen ? <X /> : <Menu />}
+              Explore Tools
+            </a>
+            <a
+              href="#stacks"
+              className="hover:text-white transition-colors py-1 flex items-center gap-1.5"
+            >
+              <Layers size={13} className="text-cyan-400" />
+              Smart Stacks
+            </a>
+            <a
+              href="https://github.com/MKJaswanth/LetsVibeCode.v.2"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors py-1 flex items-center gap-1.5"
+            >
+              <Github size={13} />
+              GitHub
+            </a>
+          </nav>
+
+          {/* Right Action Buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onOpenSubmit}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 transition-all shadow-sm active:scale-95"
+            >
+              <Plus size={14} strokeWidth={2.5} />
+              <span>Submit Tool</span>
+            </button>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 border border-white/5"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
-      </motion.nav>
+      </header>
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed top-16 left-0 w-full bg-black/95 backdrop-blur-xl border-b border-neon-cyan/20 z-40 p-6 md:hidden"
-        >
-          <div className="flex flex-col gap-6">
-            {navLinks.map((link) => (
-              <a 
-                key={link.name}
-                href={link.href}
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.18 }}
+            className="fixed top-16 left-0 right-0 z-30 bg-[#0c0c11]/95 backdrop-blur-2xl border-b border-white/[0.08] p-5 md:hidden shadow-2xl"
+          >
+            <div className="flex flex-col gap-3">
+              <a
+                href="#tools"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-lg font-orbitron text-white hover:text-neon-cyan"
+                className="px-3 py-2 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
               >
-                {link.name}
+                Explore Tools
               </a>
-            ))}
-            <a 
-                href="mailto:submit@letsvibecode.com"
-                className="flex justify-center items-center gap-2 bg-neon-pink text-white px-4 py-3 font-bold uppercase tracking-widest"
-            >
-                SUBMIT TOOL
-            </a>
-          </div>
-        </motion.div>
-      )}
+              <a
+                href="#stacks"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+              >
+                <Layers size={14} className="text-cyan-400" />
+                Smart Stacks
+              </a>
+              <a
+                href="https://github.com/MKJaswanth/LetsVibeCode.v.2"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+              >
+                <Github size={14} />
+                GitHub Repository
+              </a>
+              <div className="pt-2 border-t border-white/[0.08]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenSubmit?.();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 transition-colors"
+                >
+                  <Plus size={14} />
+                  Submit Tool
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
-};
-
-export default MenuBar;
+}
