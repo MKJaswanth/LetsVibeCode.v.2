@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, Flame, ArrowDownAZ, Star, SlidersHorizontal } from 'lucide-react';
+import { Search, X, Flame, ArrowDownAZ, Star } from 'lucide-react';
 
 export default function FilterBar({
   searchInputRef,
@@ -94,7 +94,7 @@ export default function FilterBar({
                 className={showFavorites ? 'fill-amber-400 text-amber-400' : 'text-zinc-400'}
               />
               <span>Saved</span>
-              <span className="px-1.5 py-0.2 rounded bg-black/40 text-[10px] font-mono text-zinc-300">
+              <span className="px-1.5 py-0.5 rounded bg-black/40 text-[10px] font-mono text-zinc-300">
                 {favoriteCount}
               </span>
             </button>

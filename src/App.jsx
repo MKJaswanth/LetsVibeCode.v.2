@@ -8,8 +8,8 @@ import FilterBar from './components/FilterBar';
 import SmartStacks from './components/SmartStacks';
 import MenuBar from './components/MenuBar';
 import ScrollToTop from './components/ScrollToTop';
-import { Terminal, Sparkles, Layers, Star, ExternalLink, Github, ArrowUpRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Terminal, Sparkles, Star, Github } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,9 +79,11 @@ export default function App() {
     }
   }, []);
 
-  // Global Keyboard Shortcut: Focus search with "/" or "Cmd/Ctrl+K"
+  // Global Keyboard Shortcut: Focus search with "/" or "Cmd/Ctrl+K" when modals are NOT open
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Don't focus background search if a modal is active
+      if (selectedTool || isSubmitOpen) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       if (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
@@ -91,7 +93,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [selectedTool, isSubmitOpen]);
 
   // Upvote Handler
   const handleToggleUpvote = (toolName, e) => {
@@ -309,7 +311,7 @@ export default function App() {
         ) : isDefaultView ? (
           /* Default Categorized View */
           <div className="flex flex-col gap-14">
-            {/* Featured Systems Carousel/Grid */}
+            {/* Featured Systems Grid */}
             {featuredTools.length > 0 && (
               <section>
                 <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/[0.08]">
@@ -448,22 +450,32 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Modals & Helpers */}
-      <ToolModal
-        tool={selectedTool}
-        onClose={() => setSelectedTool(null)}
-        voteCount={selectedTool ? upvotes[selectedTool.name] || 0 : 0}
-        hasVoted={selectedTool ? userVotes.has(selectedTool.name) : false}
-        onUpvote={handleToggleUpvote}
-        isBookmarked={selectedTool ? bookmarks.has(selectedTool.name) : false}
-        onToggleBookmark={handleToggleBookmark}
-      />
+      {/* Modals with AnimatePresence orchestration for smooth enter & exit transitions */}
+      <AnimatePresence>
+        {selectedTool && (
+          <ToolModal
+            key="tool-modal"
+            tool={selectedTool}
+            onClose={() => setSelectedTool(null)}
+            voteCount={upvotes[selectedTool.name] || 0}
+            hasVoted={userVotes.has(selectedTool.name)}
+            onUpvote={handleToggleUpvote}
+            isBookmarked={bookmarks.has(selectedTool.name)}
+            onToggleBookmark={handleToggleBookmark}
+          />
+        )}
+      </AnimatePresence>
 
-      <SubmitModal
-        isOpen={isSubmitOpen}
-        onClose={() => setIsSubmitOpen(false)}
-        onSubmitTool={handleSubmitTool}
-      />
+      <AnimatePresence>
+        {isSubmitOpen && (
+          <SubmitModal
+            key="submit-modal"
+            isOpen={isSubmitOpen}
+            onClose={() => setIsSubmitOpen(false)}
+            onSubmitTool={handleSubmitTool}
+          />
+        )}
+      </AnimatePresence>
 
       <ScrollToTop />
     </div>

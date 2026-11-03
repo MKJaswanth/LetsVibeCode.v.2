@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Plus, Github, Menu, X, Sparkles, Layers } from 'lucide-react';
+import { Terminal, Plus, Github, Menu, X, Layers } from 'lucide-react';
 
 export default function MenuBar({ onOpenSubmit, toolCount = 128 }) {
   const [isScrolled, setIsScrolled] = useState(false);

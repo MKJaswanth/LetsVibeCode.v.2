@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Flame, Star, CheckCircle2, Sparkles } from 'lucide-react';
+import { ExternalLink, Flame, Star, CheckCircle2 } from 'lucide-react';
 
 const pricingStyles = {
   free: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -71,7 +71,7 @@ export default function ToolCard({
                   </span>
                 )}
                 {tool.isCustom && (
-                  <span className="px-1.5 py-0.2 rounded bg-purple-500/20 border border-purple-500/30 text-[10px] font-mono text-purple-300">
+                  <span className="px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/30 text-[10px] font-mono text-purple-300">
                     Custom
                   </span>
                 )}
