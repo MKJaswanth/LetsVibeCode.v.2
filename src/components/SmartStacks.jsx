@@ -1,128 +1,116 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { GraduationCap, Rocket, PenTool, Sparkles, Layers, ArrowRight } from 'lucide-react';
+import { GraduationCap, Rocket, PenTool, Layers, CheckCircle2 } from 'lucide-react';
 
 const stacks = [
   {
     id: 'student',
-    name: 'STUDENT PROTOCOL',
-    desc: 'Power through assignments and research.',
+    name: 'Student Protocol',
+    badge: 'STUDY & RESEARCH',
+    desc: 'Research synthesis, paper summaries, and coding assignments.',
     icon: GraduationCap,
-    color: 'text-blue-400',
-    border: 'group-hover:border-blue-400',
-    bg: 'group-hover:bg-blue-400/10',
-    tools: ['DeepSeek Coder', 'ChatGPT (o1/4o)', 'Perplexity', 'Quillbot', 'ResearchRabbit']
+    accent: 'cyan',
+    borderActive: 'border-cyan-500/60 shadow-[0_0_30px_rgba(6,182,212,0.15)]',
+    tagColor: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20',
+    iconBg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+    tools: ['DeepSeek Coder', 'ChatGPT (o1/4o)', 'Perplexity', 'Quillbot', 'ResearchRabbit'],
   },
   {
     id: 'startup',
-    name: 'STARTUP ENGINE',
-    desc: 'Build and ship your MVP this weekend.',
+    name: 'Startup Engine',
+    badge: 'MVP SPRINT',
+    desc: 'Ship and deploy full-stack production software in days.',
     icon: Rocket,
-    color: 'text-orange-400',
-    border: 'group-hover:border-orange-400',
-    bg: 'group-hover:bg-orange-400/10',
-    tools: ['Cursor', 'v0', 'Supabase', 'Vercel', 'PostHog']
+    accent: 'amber',
+    borderActive: 'border-amber-500/60 shadow-[0_0_30px_rgba(245,158,11,0.15)]',
+    tagColor: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+    iconBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    tools: ['Cursor', 'v0', 'Supabase', 'Vercel', 'PostHog'],
   },
   {
     id: 'creator',
-    name: 'CREATOR SUITE',
-    desc: 'High-fidelity visual and audio synthesis.',
+    name: 'Creator Suite',
+    badge: 'MEDIA SYNTHESIS',
+    desc: 'Cinematic visual assets, voice cloning, and audio production.',
     icon: PenTool,
-    color: 'text-neon-pink',
-    border: 'group-hover:border-neon-pink',
-    bg: 'group-hover:bg-neon-pink/10',
-    tools: ['Midjourney', 'Ideogram', 'Suno', 'Runway', 'Dream Machine']
-  }
+    accent: 'pink',
+    borderActive: 'border-pink-500/60 shadow-[0_0_30px_rgba(236,72,153,0.15)]',
+    tagColor: 'bg-pink-500/10 text-pink-300 border-pink-500/20',
+    iconBg: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+    tools: ['Midjourney', 'Ideogram', 'Suno', 'Runway', 'Dream Machine'],
+  },
 ];
 
-const SmartStacks = ({ onSelectStack, activeStack }) => {
+export default function SmartStacks({ onSelectStack, activeStack }) {
   return (
-    <div className="max-w-7xl mx-auto px-4 mb-24">
-      <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
-        <div className="flex items-center gap-3">
-          <Layers className="text-neon-cyan" size={24} />
-          <h2 className="font-orbitron text-2xl text-white font-bold tracking-widest uppercase">
-            SMART STACKS
-          </h2>
+    <div className="max-w-7xl mx-auto px-4 mb-20">
+      <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/[0.08]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <Layers size={16} />
+          </div>
+          <div>
+            <h2 className="font-bold text-lg text-white tracking-tight">Smart Stacks</h2>
+            <p className="text-xs text-zinc-400">One-click workflow curated presets</p>
+          </div>
         </div>
-        <span className="text-xs font-mono text-gray-400 hidden md:block">
-          // ONE-CLICK WORKFLOW OPTIMIZATION
+        <span className="text-[11px] font-mono text-zinc-500 hidden sm:inline">
+          // CLICK TO FILTER STACK
         </span>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {stacks.map((stack) => {
           const isActive = activeStack === stack.id;
-          
+          const Icon = stack.icon;
+
           return (
-            <motion.button
+            <motion.div
               key={stack.id}
               onClick={() => onSelectStack(isActive ? null : stack)}
-              className={`group relative p-8 text-left border-2 transition-all duration-500 overflow-hidden flex flex-col h-full
-                ${isActive 
-                  ? `border-${stack.color.split('-')[1]}-400 bg-white/5 shadow-[0_0_30px_rgba(0,0,0,0.5)]` 
-                  : 'border-white/5 bg-black/40 hover:border-white/20'}
-              `}
-              style={{
-                clipPath: 'polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)'
-              }}
-              whileHover={{ y: -5 }}
+              whileHover={{ y: -3 }}
+              transition={{ duration: 0.2 }}
+              className={`glass-card rounded-2xl p-5 cursor-pointer relative flex flex-col justify-between transition-all duration-300 ${
+                isActive ? `${stack.borderActive} bg-zinc-900/80` : 'hover:border-white/20'
+              }`}
             >
-              {/* Active Glow Background */}
-              {isActive && (
-                <div className={`absolute inset-0 bg-gradient-to-br ${stack.bg.replace('group-hover:', '')} opacity-20`} />
-              )}
-
-              {/* Hover Scanline */}
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-
-              <div className="relative z-10 flex flex-col h-full">
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`p-3 rounded-lg bg-white/5 border border-white/10 ${stack.color} group-hover:scale-110 transition-transform duration-300`}>
-                    <stack.icon size={28} />
+              <div>
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${stack.iconBg}`}>
+                    <Icon size={20} />
                   </div>
-                  {isActive && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded border border-green-400/20 animate-pulse">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> ACTIVE
+                  {isActive ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-mono font-semibold">
+                      <CheckCircle2 size={12} /> ACTIVE
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-md bg-white/[0.04] text-[10px] font-mono text-zinc-500 uppercase">
+                      {stack.badge}
                     </span>
                   )}
                 </div>
-                
-                <h3 className={`font-orbitron text-xl font-black text-white mb-2 tracking-tight group-hover:${stack.color} transition-colors`}>
-                  {stack.name}
-                </h3>
-                
-                <p className="text-sm font-mono text-gray-400 mb-6 leading-relaxed">
-                  {stack.desc}
-                </p>
 
-                {/* Tool Preview Chips */}
-                <div className="mt-auto">
-                  <div className="text-[10px] font-mono text-gray-400 mb-2 uppercase tracking-wider">Includes:</div>
-                  <div className="flex flex-wrap gap-2">
-                    {stack.tools.slice(0, 3).map((tool) => (
-                      <span key={tool} className="text-[10px] px-2 py-1 rounded bg-white/5 border border-white/10 text-gray-300 whitespace-nowrap">
-                        {tool}
-                      </span>
-                    ))}
-                    {stack.tools.length > 3 && (
-                      <span className="text-[10px] px-2 py-1 text-gray-500">+{stack.tools.length - 3}</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Bottom Action Line */}
-                <div className={`mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-bold tracking-widest transition-colors ${isActive ? stack.color : 'text-gray-600 group-hover:text-white'}`}>
-                  <span>{isActive ? 'SYSTEM ENGAGED' : 'INITIALIZE'}</span>
-                  <ArrowRight size={14} className={`transition-transform duration-300 ${isActive ? 'rotate-90' : 'group-hover:translate-x-1'}`} />
-                </div>
+                <h3 className="font-semibold text-base text-zinc-100 mb-1.5">{stack.name}</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed mb-4">{stack.desc}</p>
               </div>
-            </motion.button>
+
+              {/* Tool Chips Preview */}
+              <div className="pt-3 border-t border-white/[0.06] flex flex-wrap gap-1.5">
+                {stack.tools.map((toolName) => (
+                  <span
+                    key={toolName}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-mono border ${
+                      isActive ? stack.tagColor : 'bg-white/[0.03] text-zinc-400 border-white/[0.06]'
+                    }`}
+                  >
+                    {toolName}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
           );
         })}
       </div>
     </div>
   );
-};
-
-export default SmartStacks;
+}
