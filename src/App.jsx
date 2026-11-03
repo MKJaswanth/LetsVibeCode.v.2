@@ -1,334 +1,471 @@
-import React, { useState, useEffect } from 'react';
-import { tools } from './data/tools';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { tools as initialTools } from './data/tools';
 import ToolCard from './components/ToolCard';
-import ToolModal from './components/ToolModal'; 
+import ToolModal from './components/ToolModal';
+import SubmitModal from './components/SubmitModal';
 import CategoryTabs from './components/CategoryTabs';
-import SmartStacks from './components/SmartStacks'; 
-import MatrixBackground from './components/MatrixBackground';
-import Newsletter from './components/Newsletter';
-import MenuBar from './components/MenuBar'; 
-import ScrollToTop from './components/ScrollToTop'; 
-import { Terminal, Search, Cpu, Star } from 'lucide-react'; 
+import FilterBar from './components/FilterBar';
+import SmartStacks from './components/SmartStacks';
+import MenuBar from './components/MenuBar';
+import ScrollToTop from './components/ScrollToTop';
+import { Terminal, Sparkles, Layers, Star, ExternalLink, Github, ArrowUpRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-function App() {
-  const [loading, setLoading] = useState(true);
+export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('ALL');
-  const [activeStack, setActiveStack] = useState(null); 
-  const [allTools, setAllTools] = useState(tools); 
-  const [filteredTools, setFilteredTools] = useState(tools); 
-  const [selectedTool, setSelectedTool] = useState(null); 
+  const [activeStack, setActiveStack] = useState(null);
+  const [pricingFilter, setPricingFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('trending');
+  const [showFavorites, setShowFavorites] = useState(false);
+
+  const [allTools, setAllTools] = useState(initialTools);
+  const [selectedTool, setSelectedTool] = useState(null);
+  const [isSubmitOpen, setIsSubmitOpen] = useState(false);
+
   const [upvotes, setUpvotes] = useState({});
   const [userVotes, setUserVotes] = useState(new Set());
+  const [bookmarks, setBookmarks] = useState(new Set());
 
-  // Loading Screen Timer
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2200);
-    return () => clearTimeout(timer);
-  }, []);
+  const searchInputRef = useRef(null);
 
-  // Initialize Data
+  // Initialize from LocalStorage
   useEffect(() => {
     try {
+      // 1. Custom submitted tools
+      const savedCustomTools = JSON.parse(localStorage.getItem('letsvibe_custom_tools') || '[]');
+      const mergedTools = [...savedCustomTools, ...initialTools];
+
+      // Daily featured rotation (3 tools)
       const today = new Date();
       const dayIndex = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
-      const candidates = tools.filter(t => t.popular || t.pricing === 'paid' || t.pricing === 'freemium');
-      
+      const candidates = mergedTools.filter((t) => t.popular || t.pricing === 'paid' || t.pricing === 'freemium');
+
+      let updatedTools = mergedTools;
       if (candidates.length > 0) {
         const indices = [
           (dayIndex * 3) % candidates.length,
           (dayIndex * 3 + 1) % candidates.length,
-          (dayIndex * 3 + 2) % candidates.length
+          (dayIndex * 3 + 2) % candidates.length,
         ];
-        const featuredNames = indices.map(i => candidates[i].name);
-        const updatedTools = tools.map(t => ({
+        const featuredNames = indices.map((i) => candidates[i].name);
+        updatedTools = mergedTools.map((t) => ({
           ...t,
-          featured: featuredNames.includes(t.name)
+          featured: featuredNames.includes(t.name) || Boolean(t.featured),
         }));
-        setAllTools(updatedTools);
-        if (searchTerm === '' && activeCategory === 'ALL' && !activeStack) {
-           setFilteredTools(updatedTools);
-        }
       }
+      setAllTools(updatedTools);
 
+      // 2. Upvotes
       const savedVotes = JSON.parse(localStorage.getItem('letsvibe_user_votes') || '[]');
       setUserVotes(new Set(savedVotes));
 
       const initialUpvotes = {};
-      tools.forEach(t => {
-          let hash = 0;
-          for (let i = 0; i < t.name.length; i++) hash = t.name.charCodeAt(i) + ((hash << 5) - hash);
-          initialUpvotes[t.name] = 100 + (Math.abs(hash) % 900);
-          if (savedVotes.includes(t.name)) {
-              initialUpvotes[t.name] += 1;
-          }
+      updatedTools.forEach((t) => {
+        let hash = 0;
+        for (let i = 0; i < t.name.length; i++) hash = t.name.charCodeAt(i) + ((hash << 5) - hash);
+        initialUpvotes[t.name] = 120 + (Math.abs(hash) % 780);
+        if (savedVotes.includes(t.name)) {
+          initialUpvotes[t.name] += 1;
+        }
       });
       setUpvotes(initialUpvotes);
-    } catch (error) {
-      console.error("Initialization error:", error);
+
+      // 3. Bookmarks
+      const savedBookmarks = JSON.parse(localStorage.getItem('letsvibe_bookmarks') || '[]');
+      setBookmarks(new Set(savedBookmarks));
+    } catch (err) {
+      console.error('Initialization error:', err);
     }
   }, []);
 
-  // Handle Upvote Toggle
-  const handleToggleUpvote = (toolName, e) => {
-    if (e) e.stopPropagation(); 
+  // Global Keyboard Shortcut: Focus search with "/" or "Cmd/Ctrl+K"
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+      if (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Upvote Handler
+  const handleToggleUpvote = (toolName, e) => {
+    if (e) e.stopPropagation();
     const newVotes = new Set(userVotes);
     const isRemoving = newVotes.has(toolName);
 
     if (isRemoving) {
-        newVotes.delete(toolName);
-        setUpvotes(prev => ({ ...prev, [toolName]: (prev[toolName] || 0) - 1 }));
+      newVotes.delete(toolName);
+      setUpvotes((prev) => ({ ...prev, [toolName]: (prev[toolName] || 0) - 1 }));
     } else {
-        newVotes.add(toolName);
-        setUpvotes(prev => ({ ...prev, [toolName]: (prev[toolName] || 0) + 1 }));
+      newVotes.add(toolName);
+      setUpvotes((prev) => ({ ...prev, [toolName]: (prev[toolName] || 0) + 1 }));
     }
 
     setUserVotes(newVotes);
     localStorage.setItem('letsvibe_user_votes', JSON.stringify([...newVotes]));
   };
 
-  // Filter Logic
-  useEffect(() => {
-    let results = allTools;
-
-    if (activeStack) {
-      results = results.filter(tool => activeStack.tools.includes(tool.name));
+  // Bookmark Handler
+  const handleToggleBookmark = (toolName, e) => {
+    if (e) e.stopPropagation();
+    const newBookmarks = new Set(bookmarks);
+    if (newBookmarks.has(toolName)) {
+      newBookmarks.delete(toolName);
+    } else {
+      newBookmarks.add(toolName);
     }
+    setBookmarks(newBookmarks);
+    localStorage.setItem('letsvibe_bookmarks', JSON.stringify([...newBookmarks]));
+  };
 
-    if (activeCategory !== 'ALL') {
-      results = results.filter(tool => tool.category === activeCategory);
-    }
+  // Submit Tool Handler
+  const handleSubmitTool = (newTool) => {
+    const savedCustomTools = JSON.parse(localStorage.getItem('letsvibe_custom_tools') || '[]');
+    const updatedCustom = [newTool, ...savedCustomTools];
+    localStorage.setItem('letsvibe_custom_tools', JSON.stringify(updatedCustom));
 
-    if (searchTerm) {
-      const lowerTerm = searchTerm.toLowerCase();
-      results = results.filter(tool => 
-        tool.name.toLowerCase().includes(lowerTerm) || 
-        tool.desc.toLowerCase().includes(lowerTerm) ||
-        tool.category.toLowerCase().includes(lowerTerm)
-      );
-    }
+    setAllTools((prev) => [newTool, ...prev]);
+    setUpvotes((prev) => ({ ...prev, [newTool.name]: 1 }));
+  };
 
-    setFilteredTools(results);
-  }, [searchTerm, activeCategory, allTools, activeStack]);
+  // Categories list
+  const categories = useMemo(() => {
+    return [...new Set(allTools.map((t) => t.category))];
+  }, [allTools]);
 
+  // Category counts
+  const categoryCounts = useMemo(() => {
+    const counts = {};
+    allTools.forEach((t) => {
+      counts[t.category] = (counts[t.category] || 0) + 1;
+    });
+    return counts;
+  }, [allTools]);
+
+  // Smart Stacks handler
   const handleSelectStack = (stack) => {
     setActiveStack(stack);
     if (stack) {
-        setSearchTerm(''); 
-        setActiveCategory('ALL'); 
+      setActiveCategory('ALL');
+      setShowFavorites(false);
     }
   };
 
-  const categories = [...new Set(allTools.map(t => t.category))];
-  const featuredTools = allTools.filter(t => t.featured);
+  // Filter & Sort Pipeline
+  const filteredTools = useMemo(() => {
+    let result = allTools;
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black z-[100] flex flex-col justify-center items-center">
-        <div className="relative">
-          <div className="absolute -inset-4 bg-neon-cyan/20 blur-xl animate-pulse"></div>
-          <h1 className="relative font-orbitron text-5xl md:text-7xl font-bold text-white tracking-tighter">
-            SYSTEM<span className="text-neon-cyan">.ONLINE</span>
-          </h1>
-        </div>
-        <div className="mt-8 flex items-center gap-2 font-mono text-neon-pink text-sm">
-           <Cpu className="animate-spin" size={16} /> INITIALIZING VIBE SIGNAL...
-        </div>
-        <div className="w-64 h-1 bg-gray-900 rounded overflow-hidden mt-4">
-          <div className="h-full bg-gradient-to-r from-neon-cyan to-neon-pink animate-[load_2s_ease-in-out_forwards]" />
-        </div>
-        <style>{`@keyframes load { 0% { width: 0%; } 100% { width: 100%; } }`}</style>
-      </div>
-    );
-  }
+    // 1. Stack filter
+    if (activeStack) {
+      result = result.filter((t) => activeStack.tools.includes(t.name));
+    }
+
+    // 2. Category filter
+    if (activeCategory !== 'ALL') {
+      result = result.filter((t) => t.category === activeCategory);
+    }
+
+    // 3. Pricing filter
+    if (pricingFilter !== 'all') {
+      result = result.filter((t) => t.pricing === pricingFilter);
+    }
+
+    // 4. Favorites filter
+    if (showFavorites) {
+      result = result.filter((t) => bookmarks.has(t.name));
+    }
+
+    // 5. Search keyword
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          t.desc.toLowerCase().includes(q) ||
+          t.category.toLowerCase().includes(q)
+      );
+    }
+
+    // 6. Sorting
+    return [...result].sort((a, b) => {
+      if (sortBy === 'trending') {
+        const votesA = upvotes[a.name] || 0;
+        const votesB = upvotes[b.name] || 0;
+        return votesB - votesA;
+      }
+      if (sortBy === 'alpha') {
+        return a.name.localeCompare(b.name);
+      }
+      return 0;
+    });
+  }, [allTools, activeStack, activeCategory, pricingFilter, showFavorites, searchTerm, sortBy, upvotes, bookmarks]);
+
+  const featuredTools = useMemo(() => {
+    return allTools.filter((t) => t.featured);
+  }, [allTools]);
+
+  const isDefaultView =
+    activeCategory === 'ALL' &&
+    !searchTerm.trim() &&
+    !activeStack &&
+    pricingFilter === 'all' &&
+    !showFavorites &&
+    sortBy === 'trending';
 
   return (
-      <div className="min-h-screen text-gray-200 font-mono pb-20 selection:bg-neon-pink selection:text-white">
-        <MatrixBackground />
+    <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col relative selection:bg-cyan-500/20 selection:text-cyan-200">
+      {/* Ambient Radial Spotlight Glow */}
+      <div className="ambient-glow" />
 
-        <MenuBar />
+      {/* Navigation Bar */}
+      <MenuBar onOpenSubmit={() => setIsSubmitOpen(true)} toolCount={allTools.length} />
 
-        <header className="pt-32 pb-12 px-4 text-center relative z-10">
-          <motion.h1 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="font-orbitron text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500 tracking-tighter mb-4 drop-shadow-2xl"
-          >
-            LETS VIBE <span className="text-neon-cyan">CODE</span>
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-gray-400 max-w-2xl mx-auto mb-10 text-sm md:text-base leading-relaxed"
-          >
-            Curated AI tools for the <span className="text-neon-pink font-bold">cyberpunk</span> era. 
-          </motion.p>
+      {/* Hero Section */}
+      <section className="pt-28 pb-10 px-4 text-center relative z-10">
+        <div className="max-w-3xl mx-auto flex flex-col items-center">
+          {/* Release Tag Pill */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-zinc-300 mb-6 shadow-sm">
+            <Sparkles size={13} className="text-cyan-400" />
+            <span>2026 Edition · 128+ AI & Vibe-Coding Tools</span>
+          </div>
 
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="relative max-w-2xl mx-auto mb-12 group"
-          >
-            <div className="absolute -inset-1 bg-gradient-to-r from-neon-cyan to-neon-pink rounded-lg opacity-30 group-hover:opacity-60 blur transition duration-500" />
-            <div className="relative flex items-center bg-black/80 backdrop-blur-xl border border-white/10 rounded-lg p-1">
-              <Search className="ml-4 text-gray-400 w-5 h-5" />
-              <input 
-                type="text" 
-                placeholder="Find your tool (e.g., 'coding', 'video', 'free')..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-transparent border-none text-white px-4 py-3 focus:outline-none placeholder-gray-600 font-mono text-sm"
-              />
-            </div>
-          </motion.div>
+          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-4">
+            The Curated Directory for{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400">
+              Vibe Coding
+            </span>
+          </h1>
 
-          <CategoryTabs 
-            categories={categories} 
-            activeCategory={activeCategory} 
-            setActiveCategory={setActiveCategory} 
+          <p className="text-zinc-400 text-sm sm:text-base max-w-xl leading-relaxed mb-8">
+            Discover modern coding agents, intelligence engines, multimodal synthesis, and developer stacks to ship software at lightspeed.
+          </p>
+
+          {/* Interactive Category Tabs */}
+          <CategoryTabs
+            categories={categories}
+            activeCategory={activeCategory}
+            setActiveCategory={(cat) => {
+              setActiveCategory(cat);
+              setActiveStack(null);
+            }}
+            categoryCounts={categoryCounts}
+            totalCount={allTools.length}
           />
-        </header>
+        </div>
+      </section>
 
-        <section id="stacks" className="scroll-mt-24">
-            <SmartStacks 
-            onSelectStack={handleSelectStack} 
-            activeStack={activeStack?.id} 
-            />
-        </section>
+      {/* Filter & Search Bar */}
+      <FilterBar
+        searchInputRef={searchInputRef}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        pricingFilter={pricingFilter}
+        setPricingFilter={setPricingFilter}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        showFavorites={showFavorites}
+        setShowFavorites={setShowFavorites}
+        favoriteCount={bookmarks.size}
+        totalResults={filteredTools.length}
+      />
 
-        <section id="systems" className="scroll-mt-24">
-            <main className="max-w-7xl mx-auto px-4 relative z-10 min-h-[400px]">
-            <AnimatePresence mode="wait">
-                
-                {activeCategory === 'ALL' && !searchTerm && !activeStack && (
-                    <motion.section 
-                        initial={{ opacity: 0 }} 
-                        animate={{ opacity: 1 }}
-                        className="mb-16"
-                    >
-                        <div className="flex items-center gap-2 mb-6">
-                            <Star className="text-yellow-500 fill-yellow-500" size={20} />
-                            <h2 className="font-orbitron text-2xl text-yellow-500 font-bold tracking-wide">
-                                FEATURED SYSTEMS
-                            </h2>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {featuredTools.map((tool) => (
-                                <ToolCard 
-                                    key={tool.name} 
-                                    tool={tool} 
-                                    onClick={setSelectedTool}
-                                    voteCount={upvotes[tool.name]}
-                                    hasVoted={userVotes.has(tool.name)}
-                                    onUpvote={(e) => handleToggleUpvote(tool.name, e)}
-                                />
-                            ))}
-                        </div>
-                    </motion.section>
-                )}
+      {/* Smart Stacks Section */}
+      <section id="stacks" className="scroll-mt-24">
+        <SmartStacks onSelectStack={handleSelectStack} activeStack={activeStack?.id} />
+      </section>
 
-                {activeCategory === 'ALL' && !searchTerm ? (
-                <motion.div
-                    key="all-sections"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                >
-                    {[...new Set(allTools.map(t => t.category))].map((category) => {
-                    const categoryTools = filteredTools.filter(t => t.category === category && !t.featured);
-                    if (categoryTools.length === 0) return null;
-
-                    return (
-                        <section key={category} className="mb-16">
-                        <div className="flex items-center gap-4 mb-6">
-                            <h2 className="font-orbitron text-2xl text-neon-cyan font-bold tracking-wide">
-                            {category}
-                            </h2>
-                            <div className="h-[1px] flex-grow bg-gradient-to-r from-neon-cyan/50 to-transparent" />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {categoryTools.map((tool) => (
-                            <ToolCard 
-                                key={tool.name} 
-                                tool={tool} 
-                                onClick={setSelectedTool} 
-                                voteCount={upvotes[tool.name]}
-                                hasVoted={userVotes.has(tool.name)}
-                                onUpvote={(e) => handleToggleUpvote(tool.name, e)}
-                            />
-                            ))}
-                        </div>
-                        </section>
-                    );
-                    })}
-                </motion.div>
-                ) : (
-                <motion.div 
-                    key={activeCategory + searchTerm}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredTools.map((tool) => (
-                        <ToolCard 
-                            key={tool.name} 
-                            tool={tool} 
-                            onClick={setSelectedTool} 
-                            voteCount={upvotes[tool.name]}
-                            hasVoted={userVotes.has(tool.name)}
-                            onUpvote={(e) => handleToggleUpvote(tool.name, e)}
-                        />
-                    ))}
-                    </div>
-                </motion.div>
-                )}
-            </AnimatePresence>
-            
-            {filteredTools.length === 0 && (
-                <div className="text-center py-20">
-                <Terminal size={32} className="text-gray-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">No systems found</h3>
-                </div>
-            )}
-            </main>
-        </section>
-        
-        <section id="newsletter" className="scroll-mt-24">
-            <Newsletter />
-        </section>
-
-        <footer className="text-center py-12 text-gray-600 relative z-10 bg-black">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Terminal size={16} className="text-neon-cyan" />
-              <span className="font-orbitron text-xs tracking-widest text-gray-300">LETSVIBECODE © 2025</span>
+      {/* Main Tools Directory */}
+      <main id="tools" className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 flex-grow w-full mb-24 scroll-mt-24">
+        {/* Empty State */}
+        {filteredTools.length === 0 ? (
+          <div className="py-20 text-center flex flex-col items-center justify-center glass-card rounded-2xl p-8 border border-white/[0.08]">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-zinc-400 mb-3">
+              <Terminal size={24} />
             </div>
-            <div className="flex gap-4 text-xs font-mono text-gray-400">
-                <a href="#" className="hover:text-neon-pink">PRIVACY</a>
-                <a href="#" className="hover:text-neon-pink">TERMS</a>
-                <a href="#" className="hover:text-neon-pink">ADVERTISE</a>
+            <h3 className="text-lg font-bold text-white mb-1">No tools match your criteria</h3>
+            <p className="text-xs text-zinc-400 max-w-sm mb-5">
+              Try adjusting your search terms, changing the pricing tier, or resetting filters.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm('');
+                setActiveCategory('ALL');
+                setActiveStack(null);
+                setPricingFilter('all');
+                setShowFavorites(false);
+              }}
+              className="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 transition-colors"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        ) : isDefaultView ? (
+          /* Default Categorized View */
+          <div className="flex flex-col gap-14">
+            {/* Featured Systems Carousel/Grid */}
+            {featuredTools.length > 0 && (
+              <section>
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/[0.08]">
+                  <Star size={16} className="text-amber-400 fill-amber-400" />
+                  <h2 className="font-bold text-base text-zinc-100 tracking-tight">Featured Systems</h2>
+                  <span className="text-[11px] font-mono text-zinc-500">// DAILY HIGHLIGHT</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {featuredTools.map((tool) => (
+                    <ToolCard
+                      key={tool.name}
+                      tool={tool}
+                      onClick={setSelectedTool}
+                      voteCount={upvotes[tool.name] || 0}
+                      hasVoted={userVotes.has(tool.name)}
+                      onUpvote={handleToggleUpvote}
+                      isBookmarked={bookmarks.has(tool.name)}
+                      onToggleBookmark={handleToggleBookmark}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Categorized Sections */}
+            {categories.map((category) => {
+              const categoryTools = filteredTools.filter((t) => t.category === category && !t.featured);
+              if (categoryTools.length === 0) return null;
+
+              return (
+                <section key={category}>
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/[0.08]">
+                    <div className="flex items-center gap-2.5">
+                      <h2 className="font-bold text-base text-zinc-100 tracking-tight">{category}</h2>
+                      <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                        {categoryTools.length}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {categoryTools.map((tool) => (
+                      <ToolCard
+                        key={tool.name}
+                        tool={tool}
+                        onClick={setSelectedTool}
+                        voteCount={upvotes[tool.name] || 0}
+                        hasVoted={userVotes.has(tool.name)}
+                        onUpvote={handleToggleUpvote}
+                        isBookmarked={bookmarks.has(tool.name)}
+                        onToggleBookmark={handleToggleBookmark}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        ) : (
+          /* Filtered or Sorted Flat Responsive Grid */
+          <div>
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/[0.08]">
+              <div className="flex items-center gap-2">
+                <h2 className="font-bold text-base text-zinc-100 tracking-tight">
+                  {showFavorites
+                    ? 'Saved Favorites'
+                    : activeStack
+                    ? `${activeStack.name} Stack`
+                    : activeCategory !== 'ALL'
+                    ? activeCategory
+                    : 'Search Results'}
+                </h2>
+                <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                  {filteredTools.length}
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredTools.map((tool) => (
+                <ToolCard
+                  key={tool.name}
+                  tool={tool}
+                  onClick={setSelectedTool}
+                  voteCount={upvotes[tool.name] || 0}
+                  hasVoted={userVotes.has(tool.name)}
+                  onUpvote={handleToggleUpvote}
+                  isBookmarked={bookmarks.has(tool.name)}
+                  onToggleBookmark={handleToggleBookmark}
+                />
+              ))}
             </div>
           </div>
-        </footer>
+        )}
+      </main>
 
-        <ToolModal 
-            tool={selectedTool} 
-            onClose={() => setSelectedTool(null)} 
-            voteCount={selectedTool ? upvotes[selectedTool.name] : 0}
-            hasVoted={selectedTool ? userVotes.has(selectedTool.name) : false}
-            onUpvote={(e) => selectedTool && handleToggleUpvote(selectedTool.name, e)}
-        />
-        
-        <ScrollToTop />
-      </div>
+      {/* Minimalist Developer Footer */}
+      <footer className="border-t border-white/[0.08] bg-[#07070a] py-12 px-4 relative z-10 text-xs text-zinc-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+              <Terminal size={14} />
+            </div>
+            <div>
+              <span className="font-semibold text-zinc-200">Let's Vibe Code v2.0</span>
+              <p className="text-[11px] text-zinc-500">Curated AI & Vibe-Coding Directory</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6 font-medium text-zinc-400">
+            <a href="#tools" className="hover:text-white transition-colors">
+              Tools
+            </a>
+            <a href="#stacks" className="hover:text-white transition-colors">
+              Smart Stacks
+            </a>
+            <button
+              type="button"
+              onClick={() => setIsSubmitOpen(true)}
+              className="hover:text-white transition-colors"
+            >
+              Submit Tool
+            </button>
+            <a
+              href="https://github.com/MKJaswanth/LetsVibeCode.v.2"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 hover:text-white transition-colors"
+            >
+              <Github size={13} />
+              GitHub
+            </a>
+          </div>
+
+          <div className="text-[11px] font-mono text-zinc-500">
+            <span>Free & Open Source</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* Modals & Helpers */}
+      <ToolModal
+        tool={selectedTool}
+        onClose={() => setSelectedTool(null)}
+        voteCount={selectedTool ? upvotes[selectedTool.name] || 0 : 0}
+        hasVoted={selectedTool ? userVotes.has(selectedTool.name) : false}
+        onUpvote={handleToggleUpvote}
+        isBookmarked={selectedTool ? bookmarks.has(selectedTool.name) : false}
+        onToggleBookmark={handleToggleBookmark}
+      />
+
+      <SubmitModal
+        isOpen={isSubmitOpen}
+        onClose={() => setIsSubmitOpen(false)}
+        onSubmitTool={handleSubmitTool}
+      />
+
+      <ScrollToTop />
+    </div>
   );
 }
-
-export default App;
