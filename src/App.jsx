@@ -11,8 +11,8 @@ import ScrollToTop from './components/ScrollToTop';
 import RoleSwitcher from './components/RoleSwitcher';
 import RolePlaybook from './components/RolePlaybook';
 import { roles as roleOptions, toolMatchesRole } from './data/roles';
-import { Terminal, Star, Github, ArrowRight } from 'lucide-react';
-import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import { Terminal, Star, Github, ArrowRight, Sparkles, Layers } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 
 const getRoleFromUrl = () => {
   if (typeof window === 'undefined') return 'all';
@@ -113,7 +113,6 @@ export default function App() {
   // Global Keyboard Shortcut: Focus search with "/" or "Cmd/Ctrl+K" when modals are NOT open
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't focus background search if a modal is active
       if (selectedTool || isSubmitOpen) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -208,7 +207,7 @@ export default function App() {
       result = result.filter((t) => activeStack.tools.includes(t.name));
     }
 
-    // 2. Category filter
+    // 2. Role filter
     if (activeRole !== 'all') {
       result = result.filter((t) => toolMatchesRole(t, activeRole));
     }
@@ -239,7 +238,7 @@ export default function App() {
       );
     }
 
-    // 7. Sorting. Free and open-source tools are the default path through the catalog.
+    // 7. Sorting. Free and open-source tools first by default.
     return [...result].sort((a, b) => {
       if (sortBy === 'free-first') {
         const pricingRank = { free: 0, freemium: 1, paid: 2 };
@@ -280,70 +279,75 @@ export default function App() {
     sortBy === 'free-first';
 
   return (
-    <MotionConfig reducedMotion="user">
-      <div className="app-shell min-h-screen bg-[#09090b] text-zinc-100 flex flex-col relative selection:bg-cyan-500/20 selection:text-cyan-200">
-      {/* Ambient Radial Spotlight Glow */}
-      <div className="ambient-glow" />
-      <div className="ambient-grid" />
-
+    <div className="min-h-screen bg-[#090a0f] text-zinc-100 flex flex-col relative selection:bg-sky-500/20 selection:text-sky-200">
       {/* Navigation Bar */}
       <MenuBar onOpenSubmit={() => setIsSubmitOpen(true)} toolCount={allTools.length} />
 
-      {/* Editorial Hero */}
-      <motion.section
-        className="pt-32 pb-8 px-4 relative z-10"
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-      >
+      {/* Hero Section */}
+      <section className="pt-28 pb-10 px-4 sm:px-6 relative z-10">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_auto] items-end gap-10">
-            <div className="hero-copy max-w-3xl">
-              <div className="hero-kicker inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.045] border border-white/[0.1] text-[11px] font-mono text-zinc-300 mb-6 shadow-sm">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]" />
-                <span>FOR PEOPLE WHO MAKE THINGS</span>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-white/[0.08]">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-zinc-300 mb-5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span>CURATED DIRECTORY</span>
                 <span className="text-zinc-600">/</span>
-                <span className="text-zinc-500">FREE TO START</span>
+                <span className="text-zinc-400">FREE-FIRST</span>
               </div>
 
-              <h1 className="hero-title max-w-4xl text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.055em] leading-[0.98] text-white mb-6">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.04em] text-white leading-tight mb-4">
                 Tools worth keeping.
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-300">
-                  For the work ahead.
-                </span>
               </h1>
 
-              <p className="hero-description text-zinc-400 text-sm sm:text-base max-w-2xl leading-relaxed mb-8">
-                A hand-picked list for building, designing, editing, and getting things out the door. Start with the free options and choose what actually fits.
+              <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-6 max-w-xl">
+                A hand-picked catalog for building, designing, and shipping software. Start with the free and open-source tools first.
               </p>
 
-              <div className="hero-actions flex flex-wrap items-center gap-3">
-                <a href="#tools" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-zinc-950 shadow-xl shadow-white/10 hover:bg-cyan-50 transition-colors">
-                  See the tools <ArrowRight size={15} />
+              <div className="flex flex-wrap items-center gap-3">
+                <a
+                  href="#tools"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-zinc-200 transition-colors shadow-sm"
+                >
+                  Browse Tools <ArrowRight size={14} />
                 </a>
-                <button type="button" onClick={() => setIsSubmitOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-white/[0.12] bg-white/[0.045] px-4 py-2.5 text-sm font-medium text-zinc-200 hover:bg-white/[0.09] transition-colors">
-                  Add a tool
+                <a
+                  href="#stacks"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-xs font-medium text-zinc-200 hover:bg-white/[0.08] transition-colors"
+                >
+                  <Layers size={13} className="text-sky-400" />
+                  Explore Stacks
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setIsSubmitOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors"
+                >
+                  Submit a Tool
                 </button>
               </div>
             </div>
 
-            <div className="hero-stats grid grid-cols-3 lg:grid-cols-1 gap-2.5 lg:min-w-52">
-              <div className="hero-stat rounded-2xl border border-white/[0.09] bg-white/[0.035] px-4 py-3.5 backdrop-blur-xl">
-                <div className="text-2xl font-semibold tracking-tight text-white tabular-nums">{freeToolCount}</div>
-                <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-300/80">free to start</div>
+            {/* Quick Metrics Bar */}
+            <div className="flex items-center gap-3 sm:gap-6 bg-[#0e1118] border border-white/[0.08] rounded-2xl p-4 sm:p-5 shrink-0">
+              <div className="text-left">
+                <div className="text-2xl font-semibold text-white tracking-tight tabular-nums">{allTools.length}</div>
+                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Cataloged</div>
               </div>
-              <div className="hero-stat rounded-2xl border border-white/[0.09] bg-white/[0.035] px-4 py-3.5 backdrop-blur-xl">
-                <div className="text-2xl font-semibold tracking-tight text-white tabular-nums">{openSourceCount}</div>
-                <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-300/80">open source</div>
+              <div className="h-8 w-px bg-white/[0.08]" />
+              <div className="text-left">
+                <div className="text-2xl font-semibold text-emerald-400 tracking-tight tabular-nums">{freeToolCount}</div>
+                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Free to Start</div>
               </div>
-              <div className="hero-stat rounded-2xl border border-white/[0.09] bg-white/[0.035] px-4 py-3.5 backdrop-blur-xl">
-                <div className="text-2xl font-semibold tracking-tight text-white tabular-nums">{categories.length}</div>
-                <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.14em] text-indigo-300/80">categories</div>
+              <div className="h-8 w-px bg-white/[0.08]" />
+              <div className="text-left">
+                <div className="text-2xl font-semibold text-sky-400 tracking-tight tabular-nums">{openSourceCount}</div>
+                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Open Source</div>
               </div>
             </div>
           </div>
 
-          <div className="mt-12 border-y border-white/[0.08] py-3">
+          {/* Category Tabs Strip */}
+          <div className="pt-4">
             <CategoryTabs
               categories={categories}
               activeCategory={activeCategory}
@@ -357,9 +361,10 @@ export default function App() {
             />
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      <div id="roles" className="scroll-mt-24">
+      {/* Role Switcher */}
+      <div id="roles" className="scroll-mt-20">
         <RoleSwitcher
           tools={allTools}
           activeRole={activeRole}
@@ -367,6 +372,7 @@ export default function App() {
         />
       </div>
 
+      {/* Role Playbook (Active when a role is selected) */}
       <RolePlaybook roleId={activeRole} tools={allTools} onSelectTool={setSelectedTool} />
 
       {/* Filter & Search Bar */}
@@ -383,22 +389,22 @@ export default function App() {
         favoriteCount={bookmarks.size}
         totalResults={filteredTools.length}
         toolCount={allTools.length}
-       />
+      />
 
-      {/* Ready-made workflows */}
-      <section id="stacks" className="scroll-mt-24">
+      {/* Workflows / Smart Stacks */}
+      <section id="stacks" className="scroll-mt-20">
         <SmartStacks onSelectStack={handleSelectStack} activeStack={activeStack?.id} />
       </section>
 
       {/* Main Tools Directory */}
-      <main id="tools" className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 flex-grow w-full mb-24 scroll-mt-24">
+      <main id="tools" className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 flex-grow w-full mb-20 scroll-mt-20">
         {/* Empty State */}
         {filteredTools.length === 0 ? (
-          <div className="py-20 text-center flex flex-col items-center justify-center glass-card rounded-2xl p-8 border border-white/[0.08]">
+          <div className="py-20 text-center flex flex-col items-center justify-center bg-[#0e1118] rounded-2xl p-8 border border-white/[0.08]">
             <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-zinc-400 mb-3">
-              <Terminal size={24} />
+              <Terminal size={22} />
             </div>
-            <h3 className="text-lg font-bold text-white mb-1">No tools match your criteria</h3>
+            <h3 className="text-base font-semibold text-white mb-1">No tools match your criteria</h3>
             <p className="text-xs text-zinc-400 max-w-sm mb-5">
               Try adjusting your search terms, changing the pricing tier, or resetting filters.
             </p>
@@ -419,16 +425,18 @@ export default function App() {
           </div>
         ) : isDefaultView ? (
           /* Default Categorized View */
-          <div className="flex flex-col gap-14">
-            {/* Hand-picked starting points */}
+          <div className="flex flex-col gap-12">
+            {/* Featured Picks */}
             {featuredTools.length > 0 && (
               <section>
                 <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/[0.08]">
-                  <Star size={16} className="text-amber-400 fill-amber-400" />
-                  <h2 className="font-bold text-base text-zinc-100 tracking-tight">A few good places to start</h2>
-                   <span className="text-[11px] font-mono text-zinc-500">// HAND-PICKED TOOLS</span>
+                  <Star size={15} className="text-amber-400 fill-amber-400" />
+                  <h2 className="font-semibold text-sm sm:text-base text-white tracking-tight">
+                    Editor's Starting Points
+                  </h2>
+                  <span className="text-[11px] font-mono text-zinc-500">// HAND-PICKED BENCHMARKS</span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {featuredTools.map((tool) => (
                     <ToolCard
                       key={tool.name}
@@ -454,13 +462,13 @@ export default function App() {
                 <section key={category}>
                   <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/[0.08]">
                     <div className="flex items-center gap-2.5">
-                      <h2 className="font-bold text-base text-zinc-100 tracking-tight">{category}</h2>
-                      <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                      <h2 className="font-semibold text-sm sm:text-base text-white tracking-tight">{category}</h2>
+                      <span className="text-[11px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.2 rounded border border-sky-500/20">
                         {categoryTools.length}
                       </span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {categoryTools.map((tool) => (
                       <ToolCard
                         key={tool.name}
@@ -479,27 +487,27 @@ export default function App() {
             })}
           </div>
         ) : (
-          /* Filtered or Sorted Flat Responsive Grid */
+          /* Filtered or Sorted Flat View */
           <div>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/[0.08]">
               <div className="flex items-center gap-2">
-                <h2 className="font-bold text-base text-zinc-100 tracking-tight">
+                <h2 className="font-semibold text-sm sm:text-base text-white tracking-tight">
                   {showFavorites
                     ? 'Saved Favorites'
                     : activeStack
-                    ? `${activeStack.name} Stack`
+                    ? `${activeStack.name} Workflow`
                     : activeRole !== 'all'
                     ? `${roleOptions.find((role) => role.id === activeRole)?.label || 'Role'} Playbook`
                     : activeCategory !== 'ALL'
                     ? activeCategory
                     : 'Search Results'}
                 </h2>
-                <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                <span className="text-[11px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.2 rounded border border-sky-500/20">
                   {filteredTools.length}
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredTools.map((tool) => (
                 <ToolCard
                   key={tool.name}
@@ -517,32 +525,35 @@ export default function App() {
         )}
       </main>
 
-      {/* Minimalist Developer Footer */}
-      <footer className="border-t border-white/[0.08] bg-[#07070a] py-12 px-4 relative z-10 text-xs text-zinc-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      {/* Developer Footer */}
+      <footer className="border-t border-white/[0.08] bg-[#07080d] py-10 px-4 sm:px-6 relative z-10 text-xs text-zinc-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
               <Terminal size={14} />
             </div>
             <div>
-              <span className="font-semibold tracking-[-0.02em] text-zinc-200">vibecode</span>
+              <span className="font-semibold text-zinc-200">vibecode</span>
               <p className="text-[11px] text-zinc-500">Tools worth keeping</p>
             </div>
           </div>
 
           <div className="flex items-center gap-6 font-medium text-zinc-400">
-            <a href="#tools" className="hover:text-white transition-colors">
-              Tools
+            <a href="#roles" className="hover:text-white transition-colors">
+              Roles
             </a>
             <a href="#stacks" className="hover:text-white transition-colors">
               Workflows
+            </a>
+            <a href="#tools" className="hover:text-white transition-colors">
+              Tools
             </a>
             <button
               type="button"
               onClick={() => setIsSubmitOpen(true)}
               className="hover:text-white transition-colors"
             >
-              Submit Tool
+              Submit
             </button>
             <a
               href="https://github.com/MKJaswanth/LetsVibeCode.v.2"
@@ -556,12 +567,12 @@ export default function App() {
           </div>
 
           <div className="text-[11px] font-mono text-zinc-500">
-              <span>{freeToolCount} free · {openSourceCount} open source</span>
+            <span>{freeToolCount} free · {openSourceCount} open source</span>
           </div>
         </div>
       </footer>
 
-      {/* Modals with AnimatePresence orchestration for smooth enter & exit transitions */}
+      {/* Modals */}
       <AnimatePresence>
         {selectedTool && (
           <ToolModal
@@ -589,7 +600,6 @@ export default function App() {
       </AnimatePresence>
 
       <ScrollToTop />
-      </div>
-    </MotionConfig>
+    </div>
   );
 }
