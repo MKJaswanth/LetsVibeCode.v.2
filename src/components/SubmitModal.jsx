@@ -3,15 +3,16 @@ import { motion } from 'framer-motion';
 import { X, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const CATEGORIES = [
-  'Top Tier Coding',
-  'Intelligence Engines',
-  'Visual Synthesis',
+  'Coding Agents',
+  'Models & Chat',
+  'Visual Creation',
   'Video & Audio',
-  'Productivity',
-  'Frontend & UI',
+  'Productivity & Knowledge',
+  'UI & Frontend',
   'Backend & Deploy',
-  'Research & Academic',
-  'Tool Collections',
+  'AI Engineering',
+  'Product & Growth',
+  'Research',
 ];
 
 export default function SubmitModal({ isOpen, onClose, onSubmitTool }) {
@@ -118,7 +119,7 @@ export default function SubmitModal({ isOpen, onClose, onSubmitTool }) {
               <Plus size={16} strokeWidth={2.5} />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-white">Submit an AI Tool</h3>
+              <h3 className="font-bold text-lg text-white">Add a tool to the list</h3>
               <p className="text-xs text-zinc-400">Add a new tool directly to your catalog</p>
             </div>
           </div>

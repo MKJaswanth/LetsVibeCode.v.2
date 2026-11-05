@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Plus, Github, Menu, X, Layers } from 'lucide-react';
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { Plus, Github, Menu, X, Layers } from 'lucide-react';
 
-export default function MenuBar({ onOpenSubmit, toolCount = 128 }) {
+export default function MenuBar({ onOpenSubmit, toolCount = 0 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { scrollYProgress } = useScroll();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,38 +18,47 @@ export default function MenuBar({ onOpenSubmit, toolCount = 128 }) {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+        className={`fixed top-3 left-3 right-3 z-40 rounded-2xl border transition-all duration-300 ${
           isScrolled
-            ? 'bg-[#09090b]/85 backdrop-blur-xl border-b border-white/[0.08] shadow-2xl shadow-black/60'
-            : 'bg-transparent border-b border-transparent'
+            ? 'bg-[#0b0c10]/95 backdrop-blur-2xl border-white/[0.12] shadow-2xl shadow-black/50'
+            : 'bg-[#0b0c10]/70 backdrop-blur-xl border-white/[0.08] shadow-xl shadow-black/20'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 h-px origin-left bg-gradient-to-r from-cyan-300 via-sky-400 to-indigo-400"
+          style={{ scaleX: scrollYProgress }}
+        />
+        <div className="max-w-7xl mx-auto px-3 sm:px-5 h-14 flex items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center gap-4">
             <a href="#" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-105 group-hover:border-cyan-400/60 transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-                <Terminal size={18} strokeWidth={2.2} />
+              <div className="brand-mark group-hover:scale-105 transition-transform duration-300" aria-hidden="true">
+                <span />
+                <span />
+                <span />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-sm tracking-tight text-white group-hover:text-cyan-300 transition-colors">
-                  LET'S VIBE CODE
+                <span className="font-semibold text-[15px] tracking-[-0.04em] text-white group-hover:text-cyan-200 transition-colors">
+                  vibecode
                 </span>
-                <span className="text-[10px] font-mono text-zinc-500 tracking-wider uppercase -mt-0.5">
-                  AI Directory v2.0
+                <span className="text-[9px] font-mono text-zinc-500 tracking-[0.14em] uppercase -mt-0.5">
+                  tools worth keeping
                 </span>
               </div>
             </a>
 
             {/* Live Tool Count Pill */}
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-zinc-400">
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-400/[0.07] border border-emerald-400/15 text-xs font-mono text-zinc-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-zinc-200 font-semibold">{toolCount}</span> tools curated
+               <span className="text-zinc-200 font-semibold">{toolCount}</span> tools in the list
             </div>
           </div>
 
           {/* Center Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-zinc-400">
+            <a href="#roles" className="hover:text-white transition-colors py-1">
+              By role
+            </a>
             <a
               href="#tools"
               className="hover:text-white transition-colors py-1 hover:border-b hover:border-cyan-400"
@@ -60,7 +70,7 @@ export default function MenuBar({ onOpenSubmit, toolCount = 128 }) {
               className="hover:text-white transition-colors py-1 flex items-center gap-1.5"
             >
               <Layers size={13} className="text-cyan-400" />
-              Smart Stacks
+               Workflows
             </a>
             <a
               href="https://github.com/MKJaswanth/LetsVibeCode.v.2"
@@ -78,10 +88,10 @@ export default function MenuBar({ onOpenSubmit, toolCount = 128 }) {
             <button
               type="button"
               onClick={onOpenSubmit}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 transition-all shadow-sm active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-zinc-950 hover:bg-cyan-50 transition-all shadow-sm active:scale-95"
             >
               <Plus size={14} strokeWidth={2.5} />
-              <span>Submit Tool</span>
+              <span>Add a tool</span>
             </button>
 
             {/* Mobile Menu Toggle */}
@@ -105,9 +115,16 @@ export default function MenuBar({ onOpenSubmit, toolCount = 128 }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.18 }}
-            className="fixed top-16 left-0 right-0 z-30 bg-[#0c0c11]/95 backdrop-blur-2xl border-b border-white/[0.08] p-5 md:hidden shadow-2xl"
+            className="fixed top-[4.75rem] left-3 right-3 z-30 rounded-2xl bg-[#0c0c11]/95 backdrop-blur-2xl border border-white/[0.1] p-5 md:hidden shadow-2xl"
           >
             <div className="flex flex-col gap-3">
+              <a
+                href="#roles"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
+              >
+                Browse by role
+              </a>
               <a
                 href="#tools"
                 onClick={() => setMobileMenuOpen(false)}
@@ -121,7 +138,7 @@ export default function MenuBar({ onOpenSubmit, toolCount = 128 }) {
                 className="px-3 py-2 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
               >
                 <Layers size={14} className="text-cyan-400" />
-                Smart Stacks
+                 Workflows
               </a>
               <a
                 href="https://github.com/MKJaswanth/LetsVibeCode.v.2"
@@ -142,7 +159,7 @@ export default function MenuBar({ onOpenSubmit, toolCount = 128 }) {
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 transition-colors"
                 >
                   <Plus size={14} />
-                  Submit Tool
+                  Add a tool
                 </button>
               </div>
             </div>

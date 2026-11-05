@@ -1,941 +1,208 @@
-// Added 'featured' and 'affiliate' flags to simulate monetization logic
+const tool = (name, desc, url, category, pricing, options = {}) => ({
+  name,
+  desc,
+  url,
+  category,
+  pricing,
+  openSource: false,
+  popular: false,
+  featured: false,
+  ...options,
+});
+
+// Curated November 2026 catalog. Entries are ordered free-first inside each category.
+// Pricing describes the useful entry point, not every optional paid capability.
 export const tools = [
-  {
-    "name": "Lovable",
-    "desc": "Full-stack AI app builder. Ship production apps in minutes.",
-    "url": "https://lovable.dev",
-    "category": "Top Tier Coding",
-    "pricing": "freemium",
-    "popular": true,
-    "affiliate": true
-  },
-  {
-    "name": "Cursor",
-    "desc": "The AI-first Code Editor. The choice of pros.",
-    "url": "https://cursor.com",
-    "category": "Top Tier Coding",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Midjourney",
-    "desc": "Highest aesthetic quality image generation available.",
-    "url": "https://midjourney.com",
-    "category": "Visual Synthesis",
-    "pricing": "paid"
-  },
-  {
-    "name": "Google Antigravity",
-    "desc": "Free agent-first AI IDE powered by Gemini models.",
-    "url": "https://antigravity.google",
-    "category": "Top Tier Coding",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Google Jules",
-    "desc": "Async autonomous GitHub coding agent by Google.",
-    "url": "https://jules.google",
-    "category": "Top Tier Coding",
-    "pricing": "free"
-  },
-  {
-    "name": "Gemini CLI",
-    "desc": "Open-source CLI tool for interacting with Gemini models.",
-    "url": "https://github.com/google-gemini/gemini-cli",
-    "category": "Top Tier Coding",
-    "pricing": "free"
-  },
-  {
-    "name": "Gemini Code Assist",
-    "desc": "AI-powered coding assistance in your favorite IDEs.",
-    "url": "https://codeassist.google",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Firebase Studio",
-    "desc": "Next-gen cloud workspace for full-stack app development.",
-    "url": "https://firebase.studio",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Kiro",
-    "desc": "Agentic development tool with deep repo awareness.",
-    "url": "https://kiro.dev",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Cline",
-    "desc": "Autonomous coding agent extension for VS Code.",
-    "url": "https://cline.bot",
-    "category": "Top Tier Coding",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Kilo Code",
-    "desc": "Ultra-fast code generation and agentic workflow companion.",
-    "url": "https://kilo.ai",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "OpenCode",
-    "desc": "Open-source terminal-based AI coding assistant.",
-    "url": "https://opencode.ai",
-    "category": "Top Tier Coding",
-    "pricing": "free"
-  },
-  {
-    "name": "Aider",
-    "desc": "AI pair programming in your terminal.",
-    "url": "https://aider.chat",
-    "category": "Top Tier Coding",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "DeepSeek Coder",
-    "desc": "Open-source coding model rivaling GPT-4.",
-    "url": "https://chat.deepseek.com",
-    "category": "Top Tier Coding",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Blackbox AI",
-    "desc": "Real-time code generation & search.",
-    "url": "https://www.blackbox.ai",
-    "category": "Top Tier Coding",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Codeium",
-    "desc": "Free AI autocomplete for all IDEs.",
-    "url": "https://codeium.com",
-    "category": "Top Tier Coding",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Trae",
-    "desc": "Adaptive AI IDE (ByteDance).",
-    "url": "https://traeide.com",
-    "category": "Top Tier Coding",
-    "pricing": "free"
-  },
-  {
-    "name": "MetaGPT",
-    "desc": "Multi-agent framework for dev.",
-    "url": "https://github.com/geekan/MetaGPT",
-    "category": "Top Tier Coding",
-    "pricing": "free"
-  },
-  {
-    "name": "Windsurf",
-    "desc": "Agentic IDE that thinks with you.",
-    "url": "https://codeium.com/windsurf",
-    "category": "Top Tier Coding",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Bolt.new",
-    "desc": "Prompt to full-stack web app in browser.",
-    "url": "https://bolt.new",
-    "category": "Top Tier Coding",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Replit Agent",
-    "desc": "Build software with natural language.",
-    "url": "https://replit.com",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Warp",
-    "desc": "The terminal for the 21st century.",
-    "url": "https://www.warp.dev",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Qodo (Codium)",
-    "desc": "Quality-first AI code integrity tool.",
-    "url": "https://www.qodo.ai",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Tabnine",
-    "desc": "Private & secure code completion.",
-    "url": "https://tabnine.com",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Emergent",
-    "desc": "AI coding agent.",
-    "url": "https://emergent.sh",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Mgx.dev",
-    "desc": "AI development environment.",
-    "url": "https://mgx.dev",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Qoder",
-    "desc": "AI backend generation.",
-    "url": "https://qoder.com",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "GitHub Copilot",
-    "desc": "The original AI pair programmer.",
-    "url": "https://code.visualstudio.com",
-    "category": "Top Tier Coding",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Vibecodeapp",
-    "desc": "Code with the vibe.",
-    "url": "https://vibecodeapp.com",
-    "category": "Top Tier Coding",
-    "pricing": "paid"
-  },
-  {
-    "name": "Cerebras Inference",
-    "desc": "World's fastest LPU cloud inference at record speeds.",
-    "url": "https://cloud.cerebras.ai",
-    "category": "Intelligence Engines",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Qwen Chat",
-    "desc": "Alibaba's flagship open-weight multimodal reasoning models.",
-    "url": "https://chat.qwen.ai",
-    "category": "Intelligence Engines",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Grok",
-    "desc": "Real-time conversational AI powered by xAI.",
-    "url": "https://grok.com",
-    "category": "Intelligence Engines",
-    "pricing": "freemium"
-  },
-  {
-    "name": "OpenRouter",
-    "desc": "Unified API & playground to route queries across all major LLMs.",
-    "url": "https://openrouter.ai",
-    "category": "Intelligence Engines",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Ollama",
-    "desc": "Run open-source LLMs locally on your own machine.",
-    "url": "https://ollama.com",
-    "category": "Intelligence Engines",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "LM Studio",
-    "desc": "Desktop app to discover, download, and run local LLMs offline.",
-    "url": "https://lmstudio.ai",
-    "category": "Intelligence Engines",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Groq",
-    "desc": "Instant speed inference (LPU).",
-    "url": "https://groq.com",
-    "category": "Intelligence Engines",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "HuggingChat",
-    "desc": "Access open source models.",
-    "url": "https://huggingface.co/chat",
-    "category": "Intelligence Engines",
-    "pricing": "free"
-  },
-  {
-    "name": "Microsoft Copilot",
-    "desc": "GPT-4 access for free via Bing.",
-    "url": "https://copilot.microsoft.com",
-    "category": "Intelligence Engines",
-    "pricing": "free"
-  },
-  {
-    "name": "Mistral Le Chat",
-    "desc": "Top-tier European AI models.",
-    "url": "https://chat.mistral.ai",
-    "category": "Intelligence Engines",
-    "pricing": "free"
-  },
-  {
-    "name": "DuckDuckGo AI",
-    "desc": "Anonymous AI chat.",
-    "url": "https://duckduckgo.com/?q=DuckDuckGo+AI+Chat&ia=chat",
-    "category": "Intelligence Engines",
-    "pricing": "free"
-  },
-  {
-    "name": "ChatGPT (o1/4o)",
-    "desc": "The standard for reasoning and chat.",
-    "url": "https://chat.openai.com",
-    "category": "Intelligence Engines",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Claude 3.5 Sonnet",
-    "desc": "Best-in-class coding and writing.",
-    "url": "https://claude.ai",
-    "category": "Intelligence Engines",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Gemini 1.5 Pro",
-    "desc": "Massive context window multimodal AI.",
-    "url": "https://gemini.google.com",
-    "category": "Intelligence Engines",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Perplexity",
-    "desc": "AI search engine replacement.",
-    "url": "https://www.perplexity.ai",
-    "category": "Intelligence Engines",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Poe",
-    "desc": "Access all top models in one place.",
-    "url": "https://poe.com",
-    "category": "Intelligence Engines",
-    "pricing": "freemium"
-  },
-  {
-    "name": "FLUX.1 Schnell (HF)",
-    "desc": "Ultra-fast open-weight 4-step image synthesis hosted on HF.",
-    "url": "https://huggingface.co/spaces/black-forest-labs/FLUX.1-schnell",
-    "category": "Visual Synthesis",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Black Forest Labs (FLUX)",
-    "desc": "State-of-the-art visual foundation models from the makers of SD.",
-    "url": "https://bfl.ai",
-    "category": "Visual Synthesis",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Google Mixboard",
-    "desc": "Generative AI moodboard canvas for visual exploration.",
-    "url": "https://labs.google/mixboard",
-    "category": "Visual Synthesis",
-    "pricing": "free"
-  },
-  {
-    "name": "Bing Image Creator",
-    "desc": "DALL-E 3 for free.",
-    "url": "https://www.bing.com/images/create",
-    "category": "Visual Synthesis",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Playground",
-    "desc": "1000 free generations daily (SDXL).",
-    "url": "https://playgroundai.com",
-    "category": "Visual Synthesis",
-    "pricing": "free"
-  },
-  {
-    "name": "Recraft",
-    "desc": "Best for vector art & icons.",
-    "url": "https://www.recraft.ai",
-    "category": "Visual Synthesis",
-    "pricing": "free"
-  },
-  {
-    "name": "Ideogram",
-    "desc": "Best for text rendering in images.",
-    "url": "https://ideogram.ai",
-    "category": "Visual Synthesis",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Leonardo.ai",
-    "desc": "Comprehensive asset generation suite.",
-    "url": "https://leonardo.ai",
-    "category": "Visual Synthesis",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Krea",
-    "desc": "Real-time generation and upscaling.",
-    "url": "https://www.krea.ai",
-    "category": "Visual Synthesis",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Adobe Firefly",
-    "desc": "Commercial-safe generative AI.",
-    "url": "https://firefly.adobe.com",
-    "category": "Visual Synthesis",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Flow Music",
-    "desc": "Instant AI music generator create beats and vocal tracks.",
-    "url": "https://flowmusic.app",
-    "category": "Video & Audio",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Hailuo AI (MiniMax)",
-    "desc": "Ultra-realistic cinematic video generation with dynamic motion.",
-    "url": "https://hailuoai.video",
-    "category": "Video & Audio",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Hedra",
-    "desc": "Expressive AI avatar and character video creation studio.",
-    "url": "https://www.hedra.com",
-    "category": "Video & Audio",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Dream Machine",
-    "desc": "High quality video from text/image.",
-    "url": "https://lumalabs.ai/dream-machine",
-    "category": "Video & Audio",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Udio",
-    "desc": "Music generation with high fidelity.",
-    "url": "https://www.udio.com",
-    "category": "Video & Audio",
-    "pricing": "free"
-  },
-  {
-    "name": "Suno",
-    "desc": "Generate radio-quality songs.",
-    "url": "https://suno.com",
-    "category": "Video & Audio",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Runway",
-    "desc": "Cinematic video generation (Gen-3).",
-    "url": "https://runwayml.com",
-    "category": "Video & Audio",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Kling AI",
-    "desc": "Realistic video motion generation.",
-    "url": "https://klingai.com",
-    "category": "Video & Audio",
-    "pricing": "freemium"
-  },
-  {
-    "name": "ElevenLabs",
-    "desc": "Most realistic AI voice synthesis.",
-    "url": "https://elevenlabs.io",
-    "category": "Video & Audio",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Pika",
-    "desc": "Video generation and lip sync.",
-    "url": "https://pika.art",
-    "category": "Video & Audio",
-    "pricing": "freemium"
-  },
-  {
-    "name": "NotebookLM",
-    "desc": "Google's personalized AI research assistant grounded in your notes.",
-    "url": "https://notebooklm.google",
-    "category": "Productivity",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Google Opal",
-    "desc": "Visual AI experimentation canvas to chain mini-apps.",
-    "url": "https://opal.withgoogle.com",
-    "category": "Productivity",
-    "pricing": "free"
-  },
-  {
-    "name": "Google Pomelli",
-    "desc": "AI-assisted structured document ideation and drafting.",
-    "url": "https://labs.google/pomelli",
-    "category": "Productivity",
-    "pricing": "free"
-  },
-  {
-    "name": "Napkin AI",
-    "desc": "Instantly turn text into visual diagrams and infographics.",
-    "url": "https://www.napkin.ai",
-    "category": "Productivity",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Excalidraw",
-    "desc": "Virtual whiteboard with AI-assisted sketch and diagram generation.",
-    "url": "https://excalidraw.com",
-    "category": "Productivity",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Kimi",
-    "desc": "Long-context AI & PPT assistant.",
-    "url": "https://kimi.moonshot.cn",
-    "category": "Productivity",
-    "pricing": "free"
-  },
-  {
-    "name": "Quillbot",
-    "desc": "Paraphrasing and grammar check.",
-    "url": "https://quillbot.com",
-    "category": "Productivity",
-    "pricing": "free"
-  },
-  {
-    "name": "Hemingway",
-    "desc": "Make your writing bold and clear.",
-    "url": "https://hemingwayapp.com",
-    "category": "Productivity",
-    "pricing": "free"
-  },
-  {
-    "name": "Gamma",
-    "desc": "Generate decks, docs & webpages.",
-    "url": "https://gamma.app",
-    "category": "Productivity",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Tome",
-    "desc": "Storytelling format for work.",
-    "url": "https://tome.app",
-    "category": "Productivity",
-    "pricing": "freemium"
-  },
-  {
-    "name": "SlidesAI",
-    "desc": "Text to Slides in seconds.",
-    "url": "https://www.slidesai.io",
-    "category": "Productivity",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Notion AI",
-    "desc": "Connected workspace AI assistant.",
-    "url": "https://www.notion.so",
-    "category": "Productivity",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Grammarly",
-    "desc": "AI writing partner.",
-    "url": "https://www.grammarly.com",
-    "category": "Productivity",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Otter.ai",
-    "desc": "AI meeting notes & transcription.",
-    "url": "https://otter.ai",
-    "category": "Productivity",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Beautiful.ai",
-    "desc": "Smart slide designer.",
-    "url": "https://www.beautiful.ai",
-    "category": "Productivity",
-    "pricing": "paid"
-  },
-  {
-    "name": "Jasper",
-    "desc": "Enterprise marketing content.",
-    "url": "https://www.jasper.ai",
-    "category": "Productivity",
-    "pricing": "paid"
-  },
-  {
-    "name": "21st.dev",
-    "desc": "The npm for Design Engineers. 12,000+ AI-ready UI components.",
-    "url": "https://21st.dev",
-    "category": "Frontend & UI",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Same.new",
-    "desc": "Clone any website or UI screenshot into code with AI.",
-    "url": "https://same.new",
-    "category": "Frontend & UI",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Framer",
-    "desc": "Design and publish responsive interactive websites with AI.",
-    "url": "https://www.framer.com",
-    "category": "Frontend & UI",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Google AI Studio",
-    "desc": "Prototyping with Gemini models.",
-    "url": "https://aistudio.google.com",
-    "category": "Frontend & UI",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Stitch",
-    "desc": "Prototyping with AI (Google).",
-    "url": "https://stitch.withgoogle.com",
-    "category": "Frontend & UI",
-    "pricing": "free"
-  },
-  {
-    "name": "Skywork",
-    "desc": "AI-powered coding workspace.",
-    "url": "https://skywork.ai",
-    "category": "Frontend & UI",
-    "pricing": "free"
-  },
-  {
-    "name": "v0",
-    "desc": "Generate React UI with Shadcn.",
-    "url": "https://v0.dev",
-    "category": "Frontend & UI",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Uizard",
-    "desc": "Screenshot to editable design.",
-    "url": "https://uizard.io",
-    "category": "Frontend & UI",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Base44",
-    "desc": "No-code/Low-code AI platform.",
-    "url": "https://base44.com",
-    "category": "Frontend & UI",
-    "pricing": "paid"
-  },
-  {
-    "name": "RocketAI",
-    "desc": "Launch apps faster with AI.",
-    "url": "https://rocket.new",
-    "category": "Frontend & UI",
-    "pricing": "paid"
-  },
-  {
-    "name": "Neon",
-    "desc": "Serverless Postgres with instant branching and autoscaling.",
-    "url": "https://neon.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Cloudflare Workers",
-    "desc": "Serverless execution environment running at the edge globally.",
-    "url": "https://workers.cloudflare.com/playground",
-    "category": "Backend & Deploy",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Turso",
-    "desc": "Distributed SQLite database powered by LibSQL.",
-    "url": "https://turso.tech",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Upstash",
-    "desc": "Serverless Redis, Kafka, and QStash with pay-as-you-go pricing.",
-    "url": "https://upstash.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Appwrite",
-    "desc": "Self-hostable backend platform for web and mobile developers.",
-    "url": "https://appwrite.io",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "PostHog",
-    "desc": "Product analytics, session replays, feature flags, and A/B testing.",
-    "url": "https://posthog.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "GitHub Pages",
-    "desc": "Host static sites for free.",
-    "url": "https://pages.github.com",
-    "category": "Backend & Deploy",
-    "pricing": "free"
-  },
-  {
-    "name": "Google Colab",
-    "desc": "Free cloud Jupyter notebooks.",
-    "url": "https://colab.research.google.com",
-    "category": "Backend & Deploy",
-    "pricing": "free"
-  },
-  {
-    "name": "Kaggle",
-    "desc": "Data sets & free notebooks.",
-    "url": "https://www.kaggle.com",
-    "category": "Backend & Deploy",
-    "pricing": "free"
-  },
-  {
-    "name": "Vercel",
-    "desc": "Frontend cloud deployment.",
-    "url": "https://vercel.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "Netlify",
-    "desc": "Fastest way to build the web.",
-    "url": "https://www.netlify.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Supabase",
-    "desc": "Open source Firebase alternative.",
-    "url": "https://supabase.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Firebase",
-    "desc": "Google's app backend platform.",
-    "url": "https://console.firebase.google.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Render",
-    "desc": "Unified cloud to build apps.",
-    "url": "https://render.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Heroku",
-    "desc": "Platform as a service.",
-    "url": "https://www.heroku.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "MongoDB",
-    "desc": "Flexible document database.",
-    "url": "https://www.mongodb.com",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Lightning AI",
-    "desc": "Build & deploy AI apps.",
-    "url": "https://lightning.ai",
-    "category": "Backend & Deploy",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Learn Your Way",
-    "desc": "Google's AI learning companion for personalized education.",
-    "url": "https://learnyourway.withgoogle.com",
-    "category": "Research & Academic",
-    "pricing": "free"
-  },
-  {
-    "name": "Connected Papers",
-    "desc": "Visual graphs to explore connected academic papers and citations.",
-    "url": "https://www.connectedpapers.com",
-    "category": "Research & Academic",
-    "pricing": "freemium",
-    "popular": true
-  },
-  {
-    "name": "arXiv",
-    "desc": "Open-access archive for 2M+ scholarly articles and AI preprints.",
-    "url": "https://arxiv.org",
-    "category": "Research & Academic",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Paperpal",
-    "desc": "Real-time academic writing assistance and grammar checking.",
-    "url": "https://paperpal.com",
-    "category": "Research & Academic",
-    "pricing": "freemium"
-  },
-  {
-    "name": "ResearchRabbit",
-    "desc": "Visual literature review tool.",
-    "url": "https://www.researchrabbit.ai",
-    "category": "Research & Academic",
-    "pricing": "free"
-  },
-  {
-    "name": "Semantic Scholar",
-    "desc": "AI-powered research tool.",
-    "url": "https://www.semanticscholar.org",
-    "category": "Research & Academic",
-    "pricing": "free"
-  },
-  {
-    "name": "Mermaid Live",
-    "desc": "Diagramming and visualization.",
-    "url": "https://mermaid.live",
-    "category": "Research & Academic",
-    "pricing": "free"
-  },
-  {
-    "name": "Consensus",
-    "desc": "Evidence-based answers.",
-    "url": "https://consensus.app",
-    "category": "Research & Academic",
-    "pricing": "freemium"
-  },
-  {
-    "name": "SciSpace",
-    "desc": "Understand research papers.",
-    "url": "https://typeset.io",
-    "category": "Research & Academic",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Elicit",
-    "desc": "Analyze research papers at scale.",
-    "url": "https://elicit.com",
-    "category": "Research & Academic",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Scholarcy",
-    "desc": "AI article summarizer.",
-    "url": "https://www.scholarcy.com",
-    "category": "Research & Academic",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Trinka",
-    "desc": "Grammar check for academic.",
-    "url": "https://www.trinka.ai",
-    "category": "Research & Academic",
-    "pricing": "freemium"
-  },
-  {
-    "name": "Scite",
-    "desc": "Smart citation analysis.",
-    "url": "https://scite.ai",
-    "category": "Research & Academic",
-    "pricing": "paid"
-  },
-  {
-    "name": "Hugging Face Spaces",
-    "desc": "Community-hosted open-source AI web apps, demos, and models.",
-    "url": "https://huggingface.co/spaces",
-    "category": "Tool Collections",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Futurepedia",
-    "desc": "Largest AI tools directory.",
-    "url": "https://www.futurepedia.io",
-    "category": "Tool Collections",
-    "pricing": "free",
-    "popular": true
-  },
-  {
-    "name": "Product Hunt",
-    "desc": "Launchpad for new tech.",
-    "url": "https://www.producthunt.com",
-    "category": "Tool Collections",
-    "pricing": "free"
-  },
-  {
-    "name": "AI Valley",
-    "desc": "Discover free AI tools.",
-    "url": "https://aivalley.ai/tag/free/",
-    "category": "Tool Collections",
-    "pricing": "free"
-  },
-  {
-    "name": "Toolify",
-    "desc": "AI tool aggregator.",
-    "url": "https://www.toolify.ai",
-    "category": "Tool Collections",
-    "pricing": "free"
-  },
-  {
-    "name": "TopAI Tools",
-    "desc": "Curated AI lists.",
-    "url": "https://topai.tools",
-    "category": "Tool Collections",
-    "pricing": "free"
-  },
-  {
-    "name": "Dang.ai",
-    "desc": "Best AI tools directory.",
-    "url": "https://dang.ai",
-    "category": "Tool Collections",
-    "pricing": "free"
-  }
+  // Coding Agents
+  tool('OpenCode', 'Open-source terminal agent with provider choice and free models included.', 'https://opencode.ai', 'Coding Agents', 'free', { openSource: true, popular: true, featured: true }),
+  tool('Gemini CLI', 'Open-source terminal agent with a generous Google account free tier.', 'https://github.com/google-gemini/gemini-cli', 'Coding Agents', 'free', { openSource: true, popular: true, featured: true }),
+  tool('Aider', 'Git-native pair programming in the terminal with local-model support.', 'https://aider.chat', 'Coding Agents', 'free', { openSource: true, popular: true }),
+  tool('Cline', 'Open-source IDE agent with explicit approval for edits, commands, and browser work.', 'https://cline.bot', 'Coding Agents', 'free', { openSource: true, popular: true }),
+  tool('OpenHands', 'Open-source software engineer for autonomous tasks in a sandboxed workspace.', 'https://openhands.dev', 'Coding Agents', 'free', { openSource: true, popular: true }),
+  tool('Goose', 'Open-source desktop and CLI agent for coding and MCP-powered automation.', 'https://block.github.io/goose/', 'Coding Agents', 'free', { openSource: true, popular: true }),
+  tool('Codex CLI', 'Open-source terminal coding agent from OpenAI for repo work and automation.', 'https://github.com/openai/codex', 'Coding Agents', 'free', { openSource: true }),
+  tool('Qwen Code', 'Open-source terminal agent built around Qwen coding models.', 'https://github.com/QwenLM/qwen-code', 'Coding Agents', 'free', { openSource: true }),
+  tool('Mistral Vibe', 'Open-source command-line coding assistant from Mistral.', 'https://github.com/mistralai/mistral-vibe', 'Coding Agents', 'free', { openSource: true }),
+  tool('Kilo Code', 'Open-source agent workspace for VS Code, JetBrains, and the terminal.', 'https://kilo.ai', 'Coding Agents', 'free', { openSource: true }),
+  tool('Zed', 'Ultra-fast open-source editor with native AI chat and inline transformations.', 'https://zed.dev', 'Coding Agents', 'free', { openSource: true, popular: true, featured: true, roles: ['developer'] }),
+  tool('Continue.dev', 'Open-source IDE extension for connecting local models, APIs, and custom assistants.', 'https://www.continue.dev', 'Coding Agents', 'free', { openSource: true, roles: ['developer', 'ai-engineer'] }),
+  tool('Open WebUI', 'Self-hosted ChatGPT-style interface for local models, RAG, and document chat.', 'https://openwebui.com', 'Models & Chat', 'free', { openSource: true, roles: ['developer', 'ai-engineer'] }),
+  tool('Bruno', 'Git-friendly, offline-first API client and Postman alternative.', 'https://www.usebruno.com', 'Coding Agents', 'free', { openSource: true, roles: ['developer'] }),
+  tool('Mintlify', 'AI-assisted documentation generator that turns a codebase into beautiful developer docs.', 'https://mintlify.com', 'Productivity & Knowledge', 'freemium', { roles: ['developer', 'founder'] }),
+  tool('vLLM', 'High-throughput open-source serving engine for language models on modern GPUs.', 'https://vllm.ai', 'AI Engineering', 'free', { openSource: true, roles: ['ai-engineer'] }),
+  tool('Tabby', 'Self-hosted, open-source coding assistant for private completion and chat.', 'https://tabby.tabbyml.com', 'Coding Agents', 'free', { openSource: true }),
+  tool('bolt.diy', 'Open-source browser app builder that lets you bring your own model provider.', 'https://github.com/stackblitz-labs/bolt.diy', 'Coding Agents', 'free', { openSource: true }),
+  tool('Firebase Studio', 'Browser workspace for prototyping full-stack apps with Firebase services.', 'https://firebase.studio', 'Coding Agents', 'free', { popular: true }),
+  tool('Google Jules', 'Asynchronous coding agent that works from a GitHub repository.', 'https://jules.google', 'Coding Agents', 'free', { popular: true }),
+  tool('Google Antigravity', 'Agent-first development environment powered by Google models.', 'https://antigravity.google', 'Coding Agents', 'free', { popular: true }),
+  tool('Gemini Code Assist', 'Free coding assistance for popular IDEs with Google model support.', 'https://codeassist.google', 'Coding Agents', 'free', { popular: true }),
+  tool('Cursor', 'AI-first code editor with repo-aware agents and fast inline editing.', 'https://cursor.com', 'Coding Agents', 'freemium', { popular: true }),
+  tool('GitHub Copilot', 'Inline completion, chat, and agent workflows inside your editor.', 'https://github.com/features/copilot', 'Coding Agents', 'freemium', { popular: true }),
+  tool('Windsurf', 'Agentic editor with flow-aware context for everyday software work.', 'https://windsurf.com', 'Coding Agents', 'freemium', { popular: true }),
+  tool('Claude Code', 'Terminal coding agent for planning, editing, testing, and git workflows.', 'https://www.anthropic.com/claude-code', 'Coding Agents', 'paid', { popular: true }),
+  tool('Devin', 'Cloud software engineer for delegated implementation tasks and issue work.', 'https://devin.ai', 'Coding Agents', 'paid'),
+
+  // Models & Chat
+  tool('Google AI Studio', 'Free browser playground for Gemini models, prompts, and multimodal experiments.', 'https://aistudio.google.com', 'Models & Chat', 'free', { popular: true, featured: true }),
+  tool('Gemini', 'Google’s general-purpose assistant with a useful free tier and multimodal input.', 'https://gemini.google.com', 'Models & Chat', 'free', { popular: true }),
+  tool('Qwen Chat', 'Free multimodal chat with Alibaba’s open-weight model family.', 'https://chat.qwen.ai', 'Models & Chat', 'free', { popular: true }),
+  tool('DeepSeek', 'Free reasoning and coding chat with strong long-context workflows.', 'https://chat.deepseek.com', 'Models & Chat', 'free', { popular: true }),
+  tool('HuggingChat', 'Open-model chat playground with community models and Hugging Face integration.', 'https://huggingface.co/chat', 'Models & Chat', 'free', { popular: true }),
+  tool('Microsoft Copilot', 'General assistant with web-grounded answers and Microsoft integrations.', 'https://copilot.microsoft.com', 'Models & Chat', 'free'),
+  tool('Mistral Le Chat', 'Fast general-purpose chat with multilingual and document workflows.', 'https://chat.mistral.ai', 'Models & Chat', 'free'),
+  tool('Ollama', 'Run open models locally and expose a simple local API.', 'https://ollama.com', 'Models & Chat', 'free', { openSource: true, popular: true, featured: true }),
+  tool('LM Studio', 'Desktop app for downloading and running local language models.', 'https://lmstudio.ai', 'Models & Chat', 'free', { popular: true }),
+  tool('Jan', 'Open-source ChatGPT alternative that runs models locally or through an API.', 'https://jan.ai', 'Models & Chat', 'free', { openSource: true }),
+  tool('GPT4All', 'Private local chat and document search without a cloud account.', 'https://gpt4all.io', 'Models & Chat', 'free', { openSource: true }),
+  tool('LocalAI', 'Open-source, OpenAI-compatible local inference for text, vision, voice, and images.', 'https://localai.io', 'Models & Chat', 'free', { openSource: true }),
+  tool('OpenRouter', 'One API and playground for comparing models across providers.', 'https://openrouter.ai', 'Models & Chat', 'freemium', { popular: true }),
+  tool('Groq', 'Very fast hosted inference with a developer-friendly free tier.', 'https://groq.com', 'Models & Chat', 'freemium', { popular: true }),
+  tool('Perplexity', 'Search-first answers with citations and a useful free plan.', 'https://www.perplexity.ai', 'Models & Chat', 'freemium', { popular: true }),
+  tool('ChatGPT', 'General-purpose assistant with a free plan and broad tool support.', 'https://chatgpt.com', 'Models & Chat', 'freemium', { popular: true }),
+  tool('Claude', 'Long-context assistant for writing, analysis, and careful reasoning.', 'https://claude.ai', 'Models & Chat', 'freemium', { popular: true }),
+
+  // Visual Creation
+  tool('ComfyUI', 'Open-source node graph for local image, video, audio, and 3D workflows.', 'https://github.com/comfyanonymous/ComfyUI', 'Visual Creation', 'free', { openSource: true, popular: true, featured: true }),
+  tool('Krita AI Diffusion', 'Free Krita plugin for local inpainting, outpainting, and guided generation.', 'https://github.com/Acly/krita-ai-diffusion', 'Visual Creation', 'free', { openSource: true, popular: true }),
+  tool('InvokeAI', 'Open-source creative engine with a focused canvas and local model control.', 'https://invoke.ai', 'Visual Creation', 'free', { openSource: true }),
+  tool('Stable Diffusion WebUI Forge', 'Local Stable Diffusion interface tuned for efficient generation.', 'https://github.com/lllyasviel/stable-diffusion-webui-forge', 'Visual Creation', 'free', { openSource: true }),
+  tool('FLUX.1 Schnell', 'Open-weight image model demo for fast local and hosted experiments.', 'https://huggingface.co/spaces/black-forest-labs/FLUX.1-schnell', 'Visual Creation', 'free', { openSource: true }),
+  tool('Blender', 'Free, open-source 3D creation suite with a growing generative workflow ecosystem.', 'https://www.blender.org', 'Visual Creation', 'free', { openSource: true }),
+  tool('Hugging Face Spaces', 'Community-hosted demos for trying open visual and multimodal models.', 'https://huggingface.co/spaces', 'Visual Creation', 'free', { popular: true }),
+  tool('Ideogram', 'Image generation with especially strong typography and layout control.', 'https://ideogram.ai', 'Visual Creation', 'freemium', { popular: true }),
+  tool('Recraft', 'Brand-aware image generation and vector creation for design workflows.', 'https://www.recraft.ai', 'Visual Creation', 'freemium'),
+  tool('Krea', 'Real-time image generation, enhancement, and creative canvas tools.', 'https://www.krea.ai', 'Visual Creation', 'freemium'),
+  tool('Adobe Firefly', 'Generative image and design features inside Adobe’s creative ecosystem.', 'https://firefly.adobe.com', 'Visual Creation', 'freemium'),
+  tool('Midjourney', 'High-aesthetic image generation for art direction and visual exploration.', 'https://www.midjourney.com', 'Visual Creation', 'paid', { popular: true }),
+
+  // Video & Audio
+  tool('Whisper', 'Open-source speech recognition for transcription, translation, and subtitles.', 'https://github.com/openai/whisper', 'Video & Audio', 'free', { openSource: true, popular: true, featured: true }),
+  tool('Audacity', 'Free, open-source audio editor for recording, cleanup, and production.', 'https://www.audacityteam.org', 'Video & Audio', 'free', { openSource: true }),
+  tool('FFmpeg', 'Open-source command-line toolkit for converting and processing media.', 'https://ffmpeg.org', 'Video & Audio', 'free', { openSource: true }),
+  tool('OBS Studio', 'Free, open-source recording and live-streaming production tool.', 'https://obsproject.com', 'Video & Audio', 'free', { openSource: true }),
+  tool('LosslessCut', 'Fast lossless video and audio trimming without re-encoding.', 'https://github.com/mifi/lossless-cut', 'Video & Audio', 'free', { openSource: true }),
+  tool('DaVinci Resolve', 'Professional editing, color, audio, and visual effects with a powerful free tier.', 'https://www.blackmagicdesign.com/products/davinciresolve', 'Video & Audio', 'free', { popular: true, featured: true, roles: ['video-editor'] }),
+  tool('Adobe Podcast', 'One-click speech enhancement that cleans up recorded voice for video and podcasts.', 'https://podcast.adobe.com', 'Video & Audio', 'free', { roles: ['video-editor'] }),
+  tool('CapCut Desktop', 'Fast desktop editor with captions, background removal, and social video workflows.', 'https://www.capcut.com/tools/desktop-video-editor', 'Video & Audio', 'freemium', { roles: ['video-editor', 'founder'] }),
+  tool('Descript', 'Edit video and podcasts by editing the transcript like a document.', 'https://www.descript.com', 'Video & Audio', 'freemium', { roles: ['video-editor', 'founder'] }),
+  tool('PixVerse', 'Generative video with camera motion, character consistency, and image-to-video tools.', 'https://pixverse.ai', 'Video & Audio', 'freemium', { roles: ['video-editor'] }),
+  tool('Audiopen', 'Turn spoken thoughts into clean notes, scripts, and structured writing.', 'https://www.audiopen.ai', 'Productivity & Knowledge', 'freemium', { roles: ['video-editor', 'founder'] }),
+  tool('ElevenLabs', 'High-quality text-to-speech, voice design, and dubbing workflows.', 'https://elevenlabs.io', 'Video & Audio', 'freemium', { popular: true }),
+  tool('Suno', 'Prompt-based music generation for sketches, demos, and finished tracks.', 'https://suno.com', 'Video & Audio', 'freemium', { popular: true }),
+  tool('Runway', 'Generative video, editing, and visual effects for creators and teams.', 'https://runwayml.com', 'Video & Audio', 'freemium', { popular: true }),
+  tool('Kling AI', 'Generative video with image-to-video and cinematic motion controls.', 'https://klingai.com', 'Video & Audio', 'freemium', { popular: true }),
+  tool('Luma Dream Machine', 'Fast text-to-video and image-to-video experimentation.', 'https://lumalabs.ai/dream-machine', 'Video & Audio', 'freemium'),
+
+  // Productivity & Knowledge
+  tool('NotebookLM', 'Source-grounded research notebook for PDFs, notes, and audio overviews.', 'https://notebooklm.google', 'Productivity & Knowledge', 'free', { popular: true, featured: true }),
+  tool('Excalidraw', 'Free collaborative whiteboard for diagrams, flows, and rough ideas.', 'https://excalidraw.com', 'Productivity & Knowledge', 'free', { openSource: true }),
+  tool('Obsidian', 'Local-first knowledge base with markdown files and a strong plugin ecosystem.', 'https://obsidian.md', 'Productivity & Knowledge', 'free', { popular: true }),
+  tool('Zotero', 'Free reference manager for collecting, organizing, and citing research.', 'https://www.zotero.org', 'Productivity & Knowledge', 'free', { openSource: true }),
+  tool('Joplin', 'Open-source notes and to-do app with sync and end-to-end encryption options.', 'https://joplinapp.org', 'Productivity & Knowledge', 'free', { openSource: true }),
+  tool('Penpot', 'Open-source collaborative design platform for product and interface teams.', 'https://penpot.app', 'UI & Frontend', 'free', { openSource: true, popular: true, roles: ['designer', 'founder'] }),
+  tool('Google Opal', 'No-code canvas for composing small AI workflows and mini-apps.', 'https://opal.withgoogle.com', 'Productivity & Knowledge', 'free'),
+  tool('Raycast', 'Fast command bar for macOS with extensions, snippets, and AI features.', 'https://www.raycast.com', 'Productivity & Knowledge', 'free'),
+  tool('Notion', 'Flexible workspace for docs, databases, projects, and AI-assisted notes.', 'https://www.notion.so', 'Productivity & Knowledge', 'freemium', { popular: true }),
+  tool('Gamma', 'Quickly turn ideas into editable presentations, docs, and webpages.', 'https://gamma.app', 'Productivity & Knowledge', 'freemium'),
+  tool('Canva', 'Accessible design suite with templates and generative creative features.', 'https://www.canva.com', 'Productivity & Knowledge', 'freemium', { popular: true }),
+  tool('Napkin AI', 'Turn written ideas into diagrams and visual explanations.', 'https://www.napkin.ai', 'Productivity & Knowledge', 'freemium'),
+
+  // UI & Frontend
+  tool('shadcn/ui', 'Copy-paste React components built on accessible primitives and Tailwind CSS.', 'https://ui.shadcn.com', 'UI & Frontend', 'free', { openSource: true, popular: true, featured: true }),
+  tool('21st.dev', 'Community component registry for shipping polished React and Tailwind interfaces.', 'https://21st.dev', 'UI & Frontend', 'free', { popular: true }),
+  tool('Magic UI', 'Animated React components and patterns for modern product interfaces.', 'https://magicui.design', 'UI & Frontend', 'free', { openSource: true }),
+  tool('Aceternity UI', 'Copy-paste animated UI components for React and Next.js projects.', 'https://ui.aceternity.com', 'UI & Frontend', 'free'),
+  tool('daisyUI', 'Open-source Tailwind component classes with themes and accessible defaults.', 'https://daisyui.com', 'UI & Frontend', 'free', { openSource: true }),
+  tool('Storybook', 'Open-source workshop for building, testing, and documenting UI components.', 'https://storybook.js.org', 'UI & Frontend', 'free', { openSource: true, popular: true }),
+  tool('React Bits', 'Free collection of practical animated React components and effects.', 'https://www.reactbits.dev', 'UI & Frontend', 'free'),
+  tool('Figma', 'Collaborative interface design and prototyping with a useful free plan.', 'https://www.figma.com', 'UI & Frontend', 'freemium', { popular: true }),
+  tool('Framer', 'Visual website builder with responsive layout and publishing workflows.', 'https://www.framer.com', 'UI & Frontend', 'freemium'),
+  tool('v0', 'Prompt-to-interface generator for React, Next.js, and Tailwind projects.', 'https://v0.dev', 'UI & Frontend', 'freemium', { popular: true }),
+  tool('Tailwind UI', 'Paid production-ready component library from the Tailwind team.', 'https://tailwindui.com', 'UI & Frontend', 'paid'),
+  tool('Relume', 'Prompt-to-sitemap and wireframe builder that exports into Figma and Webflow.', 'https://www.relume.io', 'UI & Frontend', 'freemium', { roles: ['designer', 'founder'] }),
+  tool('Galileo AI', 'Generate editable high-fidelity product screens from natural language prompts.', 'https://www.usegalileo.ai', 'UI & Frontend', 'freemium', { roles: ['designer'] }),
+  tool('Khroma', 'Personalized color generator that learns your taste and creates accessible palettes.', 'https://www.khroma.co', 'UI & Frontend', 'free', { roles: ['designer'] }),
+  tool('Vectorizer.ai', 'Convert raster images into clean, scalable SVG vectors with AI curve fitting.', 'https://vectorizer.ai', 'UI & Frontend', 'freemium', { roles: ['designer'] }),
+
+  // Backend & Deploy
+  tool('Supabase', 'Postgres, auth, storage, realtime, and edge functions with a generous free tier.', 'https://supabase.com', 'Backend & Deploy', 'free', { popular: true, featured: true }),
+  tool('Neon', 'Serverless Postgres with branching and scale-to-zero for prototypes and previews.', 'https://neon.tech', 'Backend & Deploy', 'free', { popular: true }),
+  tool('Cloudflare Workers', 'Edge runtime for APIs, webhooks, background jobs, and full-stack apps.', 'https://workers.cloudflare.com', 'Backend & Deploy', 'free', { popular: true }),
+  tool('Cloudflare Pages', 'Static and frontend deployment on Cloudflare’s global network.', 'https://pages.cloudflare.com', 'Backend & Deploy', 'free'),
+  tool('Appwrite', 'Open-source backend platform with auth, databases, storage, and functions.', 'https://appwrite.io', 'Backend & Deploy', 'free', { openSource: true, popular: true }),
+  tool('PocketBase', 'Single-binary open-source backend with SQLite, auth, files, and realtime.', 'https://pocketbase.io', 'Backend & Deploy', 'free', { openSource: true }),
+  tool('Turso', 'SQLite-compatible edge database with a developer-friendly free plan.', 'https://turso.tech', 'Backend & Deploy', 'free'),
+  tool('GitHub Pages', 'Simple free static hosting directly from a GitHub repository.', 'https://pages.github.com', 'Backend & Deploy', 'free'),
+  tool('Coolify', 'Open-source self-hostable platform for deploying apps on your own server.', 'https://coolify.io', 'Backend & Deploy', 'free', { openSource: true }),
+  tool('Vercel', 'Preview deployments and serverless hosting for frontend teams.', 'https://vercel.com', 'Backend & Deploy', 'freemium', { popular: true }),
+  tool('Netlify', 'Frontend deployment with serverless functions, forms, and edge features.', 'https://www.netlify.com', 'Backend & Deploy', 'freemium'),
+  tool('Firebase', 'Managed app platform with auth, database, storage, hosting, and functions.', 'https://firebase.google.com', 'Backend & Deploy', 'freemium', { popular: true }),
+  tool('Render', 'Straightforward hosting for web services, static sites, workers, and databases.', 'https://render.com', 'Backend & Deploy', 'freemium'),
+  tool('Convex', 'Reactive backend with typed functions and real-time data synchronization.', 'https://www.convex.dev', 'Backend & Deploy', 'freemium'),
+  tool('Upstash', 'Serverless Redis and Kafka with usage-based pricing and a free tier.', 'https://upstash.com', 'Backend & Deploy', 'freemium'),
+  tool('PostHog', 'Product analytics, feature flags, session replay, and experiments in one stack.', 'https://posthog.com', 'Backend & Deploy', 'freemium', { popular: true }),
+
+  // AI Engineering
+  tool('Dify', 'Open-source visual platform for building RAG applications, agents, and LLM workflows.', 'https://dify.ai', 'AI Engineering', 'free', { openSource: true, popular: true, featured: true, roles: ['ai-engineer', 'founder'] }),
+  tool('Langflow', 'Open-source visual builder for LangChain and multi-agent application flows.', 'https://langflow.org', 'AI Engineering', 'free', { openSource: true, roles: ['ai-engineer'] }),
+  tool('Kaggle Notebooks', 'Free hosted notebooks, datasets, and GPU-backed experiments for data science.', 'https://www.kaggle.com/code', 'AI Engineering', 'free', { roles: ['ai-engineer'] }),
+  tool('PandasAI', 'Ask questions about dataframes in natural language and generate charts and insights.', 'https://pandas-ai.com', 'AI Engineering', 'free', { openSource: true, roles: ['ai-engineer'] }),
+  tool('Lightning Studio', 'Cloud development environment for machine learning experiments and GPU workflows.', 'https://lightning.ai/studios', 'AI Engineering', 'freemium', { roles: ['ai-engineer'] }),
+
+  // Product & Growth
+  tool('ChatPRD', 'Product copilot for PRDs, user stories, specs, and roadmap thinking.', 'https://chatprd.ai', 'Product & Growth', 'freemium', { popular: true, featured: true, roles: ['founder'] }),
+  tool('Whimsical AI', 'Collaborative workspace for AI-assisted mind maps, user flows, and wireframes.', 'https://whimsical.com/ai', 'Product & Growth', 'freemium', { roles: ['founder', 'designer'] }),
+  tool('Taskade', 'AI workspace for projects, task management, and autonomous research agents.', 'https://www.taskade.com', 'Product & Growth', 'freemium', { roles: ['founder'] }),
+  tool('AnswerThePublic', 'Visualize search questions to uncover customer language and content opportunities.', 'https://answerthepublic.com', 'Product & Growth', 'free', { roles: ['founder'] }),
+
+  // Research
+  tool('arXiv', 'Open repository for research papers across computer science and beyond.', 'https://arxiv.org', 'Research', 'free', { popular: true }),
+  tool('Semantic Scholar', 'Free academic search with citation graphs and paper recommendations.', 'https://www.semanticscholar.org', 'Research', 'free', { popular: true }),
+  tool('OpenAlex', 'Open catalog and API for exploring the global research ecosystem.', 'https://openalex.org', 'Research', 'free', { openSource: true }),
+  tool('ResearchRabbit', 'Visual literature discovery and citation mapping for reviews.', 'https://www.researchrabbit.ai', 'Research', 'free', { popular: true }),
+  tool('Mermaid Live', 'Browser editor for turning text into diagrams and technical documentation.', 'https://mermaid.live', 'Research', 'free', { openSource: true }),
+  tool('Connected Papers', 'Visual graph for finding related papers around a seed work.', 'https://www.connectedpapers.com', 'Research', 'freemium'),
+  tool('Consensus', 'Search and summarize findings from peer-reviewed research.', 'https://consensus.app', 'Research', 'freemium'),
+  tool('Elicit', 'Research assistant for finding, screening, and extracting paper evidence.', 'https://elicit.com', 'Research', 'freemium'),
+  tool('SciSpace', 'Read and understand academic papers with explanations and summaries.', 'https://scispace.com', 'Research', 'freemium'),
+  tool('Scite', 'Citation intelligence that shows supporting and contrasting evidence.', 'https://scite.ai', 'Research', 'paid'),
 ];
+
+const practicalMetadata = {
+  Zed: { surface: 'Desktop', execution: 'Local', bestFor: 'Fast native editing with local or hosted models.' },
+  OpenCode: { surface: 'Terminal', execution: 'Local', bestFor: 'Provider-neutral repo work from the command line.' },
+  Bruno: { surface: 'Desktop', execution: 'Local', bestFor: 'Git-versioned API collections without a cloud workspace.' },
+  Supabase: { surface: 'Web + API', execution: 'Hosted', bestFor: 'Postgres, auth, storage, and realtime for an MVP.' },
+  'DaVinci Resolve': { surface: 'Desktop', execution: 'Local', bestFor: 'Serious editing, color, audio, and effects on a free tier.' },
+  'Adobe Podcast': { surface: 'Web', execution: 'Hosted', bestFor: 'Cleaning spoken audio recorded on everyday hardware.' },
+  Whisper: { surface: 'CLI + API', execution: 'Local', bestFor: 'Private transcription, translation, and subtitles.' },
+  'CapCut Desktop': { surface: 'Desktop', execution: 'Hybrid', bestFor: 'Fast captioned social video and short-form edits.' },
+  Penpot: { surface: 'Web', execution: 'Hybrid', bestFor: 'Open-source product design with CSS-aware layouts.' },
+  Relume: { surface: 'Web', execution: 'Hosted', bestFor: 'Turning a product brief into a sitemap and wireframe.' },
+  Khroma: { surface: 'Web', execution: 'Hosted', bestFor: 'Finding color combinations that match your visual taste.' },
+  'Vectorizer.ai': { surface: 'Web', execution: 'Hosted', bestFor: 'Converting raster artwork into editable SVG paths.' },
+  Ollama: { surface: 'CLI + API', execution: 'Local', bestFor: 'Running open models privately on your own machine.' },
+  Dify: { surface: 'Web', execution: 'Hybrid', bestFor: 'Building RAG apps and agent workflows visually.' },
+  Langflow: { surface: 'Web', execution: 'Local', bestFor: 'Prototyping model and agent flows with a visual canvas.' },
+  'Kaggle Notebooks': { surface: 'Web', execution: 'Hosted', bestFor: 'Notebook experiments with datasets and free GPU sessions.' },
+  ChatPRD: { surface: 'Web', execution: 'Hosted', bestFor: 'Drafting product requirements and user stories.' },
+  'AnswerThePublic': { surface: 'Web', execution: 'Hosted', bestFor: 'Finding the questions people ask before building.' },
+};
+
+const roleDefaults = {
+  'Coding Agents': ['developer'],
+  'Models & Chat': ['developer', 'ai-engineer'],
+  'Visual Creation': ['designer', 'video-editor'],
+  'Video & Audio': ['video-editor'],
+  'Productivity & Knowledge': ['founder', 'designer'],
+  'UI & Frontend': ['designer', 'developer'],
+  'Backend & Deploy': ['developer', 'founder', 'ai-engineer'],
+  'AI Engineering': ['ai-engineer'],
+  'Product & Growth': ['founder', 'designer'],
+  Research: ['ai-engineer'],
+};
+
+tools.forEach((entry) => {
+  Object.assign(entry, practicalMetadata[entry.name] || {});
+  entry.roles = entry.roles || roleDefaults[entry.category] || [];
+});

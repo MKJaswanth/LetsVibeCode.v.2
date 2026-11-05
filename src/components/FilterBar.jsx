@@ -13,6 +13,7 @@ export default function FilterBar({
   setShowFavorites,
   favoriteCount = 0,
   totalResults = 0,
+  toolCount = 0,
 }) {
   const pricingOptions = [
     { id: 'all', label: 'All Pricing' },
@@ -22,18 +23,18 @@ export default function FilterBar({
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 mb-10">
-      <div className="glass-surface rounded-2xl p-3 sm:p-4 border border-white/[0.08] shadow-2xl flex flex-col gap-3">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+      <div className="filter-shell glass-surface rounded-3xl p-2.5 sm:p-3 border border-white/[0.08] shadow-2xl flex flex-col gap-2.5">
         {/* Top: Spotlight Search Bar */}
         <div className="relative flex items-center">
           <Search size={18} className="absolute left-3.5 text-zinc-400 pointer-events-none" />
-          <input
-            ref={searchInputRef}
+            <input
+              ref={searchInputRef}
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search 128+ AI tools by name, category, or workflow..."
-            className="w-full bg-white/[0.03] hover:bg-white/[0.05] focus:bg-white/[0.07] border border-white/[0.08] focus:border-cyan-500/50 rounded-xl pl-10 pr-24 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-sans"
+             placeholder={`Search ${toolCount}+ tools by name, category, or workflow...`}
+              className="search-field w-full bg-black/20 hover:bg-white/[0.04] focus:bg-white/[0.06] border border-white/[0.08] focus:border-cyan-500/50 rounded-2xl pl-10 pr-24 py-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-sans"
           />
 
           <div className="absolute right-3 flex items-center gap-1.5">
@@ -54,7 +55,7 @@ export default function FilterBar({
         </div>
 
         {/* Bottom Filter & Sorting Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-white/[0.05] text-xs">
+         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/[0.05] text-xs">
           {/* Pricing Tier Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
             {pricingOptions.map((opt) => {
@@ -101,6 +102,19 @@ export default function FilterBar({
 
             {/* Sort Toggle */}
             <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-lg p-0.5">
+              <button
+                type="button"
+                onClick={() => setSortBy('free-first')}
+                title="Prioritize free and open-source tools"
+                className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 ${
+                  sortBy === 'free-first'
+                    ? 'bg-white/15 text-white shadow-sm font-semibold'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <span className="text-emerald-400">$0</span>
+                <span className="hidden sm:inline">Free first</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setSortBy('trending')}

@@ -1,23 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Flame, Star, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, Flame, Star } from 'lucide-react';
+import ToolIcon from './ToolIcon';
 
 const pricingStyles = {
   free: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   freemium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   paid: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-};
-
-const categoryGradients = {
-  'Top Tier Coding': 'from-cyan-500/20 to-blue-500/20 border-cyan-500/30 text-cyan-400',
-  'Intelligence Engines': 'from-indigo-500/20 to-purple-500/20 border-indigo-500/30 text-indigo-400',
-  'Visual Synthesis': 'from-pink-500/20 to-rose-500/20 border-pink-500/30 text-pink-400',
-  'Video & Audio': 'from-violet-500/20 to-fuchsia-500/20 border-violet-500/30 text-violet-400',
-  'Productivity': 'from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-400',
-  'Frontend & UI': 'from-emerald-500/20 to-teal-500/20 border-emerald-500/30 text-emerald-400',
-  'Backend & Deploy': 'from-blue-500/20 to-sky-500/20 border-blue-500/30 text-blue-400',
-  'Research & Academic': 'from-teal-500/20 to-cyan-500/20 border-teal-500/30 text-teal-400',
-  'Tool Collections': 'from-zinc-500/20 to-neutral-500/20 border-zinc-500/30 text-zinc-400',
 };
 
 export default function ToolCard({
@@ -29,18 +18,16 @@ export default function ToolCard({
   isBookmarked = false,
   onToggleBookmark,
 }) {
-  const isVerified = tool.popular || tool.featured;
-  const gradientClass =
-    categoryGradients[tool.category] || 'from-zinc-500/20 to-neutral-500/20 border-zinc-500/30 text-zinc-400';
-
-  const initial = tool.name ? tool.name.charAt(0).toUpperCase() : '?';
 
   return (
     <motion.div
       onClick={() => onClick(tool)}
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.12 }}
       whileHover={{ y: -3 }}
-      transition={{ duration: 0.2 }}
-      className={`glass-card rounded-2xl p-5 flex flex-col justify-between h-full cursor-pointer relative group overflow-hidden ${
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className={`tool-card glass-card rounded-3xl p-6 flex flex-col justify-between h-full cursor-pointer relative group overflow-hidden ${
         tool.featured ? 'border-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.08)]' : ''
       }`}
     >
@@ -53,36 +40,29 @@ export default function ToolCard({
         {/* Card Header */}
         <div className="flex items-start justify-between gap-3 mb-3.5">
           <div className="flex items-center gap-3">
-            {/* Tool Icon Avatar */}
-            <div
-              className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradientClass} border flex items-center justify-center font-bold font-mono text-sm shadow-inner shrink-0`}
-            >
-              {initial}
-            </div>
+            <ToolIcon tool={tool} />
 
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-semibold text-base text-zinc-100 group-hover:text-cyan-300 transition-colors tracking-tight">
                   {tool.name}
                 </h3>
-                {isVerified && (
-                  <span title="Verified AI Tool" className="text-cyan-400">
-                    <CheckCircle2 size={14} className="fill-cyan-400/20" />
-                  </span>
-                )}
                 {tool.isCustom && (
                   <span className="px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/30 text-[10px] font-mono text-purple-300">
                     Custom
                   </span>
                 )}
               </div>
-              <span className="text-[11px] font-mono text-zinc-500">{tool.category}</span>
+              <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-500">
+                <span>{tool.category}</span>
+                {tool.openSource && <span className="text-emerald-400/80">· open source</span>}
+              </div>
             </div>
           </div>
 
           {/* Pricing Badge */}
           <span
-            className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium border uppercase tracking-wider ${
+            className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-medium border uppercase tracking-wider ${
               pricingStyles[tool.pricing] || pricingStyles.freemium
             }`}
           >
@@ -94,6 +74,12 @@ export default function ToolCard({
         <p className="text-zinc-400 text-xs sm:text-sm line-clamp-2 leading-relaxed mb-4">
           {tool.desc}
         </p>
+
+        <div className="flex flex-wrap gap-1.5 mb-5">
+          <span className="tool-meta-chip">{tool.surface || 'Provider site'}</span>
+          <span className="tool-meta-chip">{tool.execution || (tool.openSource ? 'Local / self-hosted' : 'Varies')}</span>
+          {tool.openSource && <span className="tool-meta-chip tool-meta-chip-accent">Open source</span>}
+        </div>
       </div>
 
       {/* Card Footer Actions */}
