@@ -2,6 +2,10 @@
 
 A practical, free-first directory of current AI, developer, creative, research, and deployment tools built with React, Vite, Tailwind CSS v4, and Framer Motion.
 
+- **Production (Vercel)**: [lets-vibe-code-v-2.vercel.app](https://lets-vibe-code-v-2.vercel.app/)
+- **Mirror (GitHub Pages)**: [mkjaswanth.github.io/LetsVibeCode.v.2](https://mkjaswanth.github.io/LetsVibeCode.v.2/)
+- **Repository**: [github.com/MKJaswanth/LetsVibeCode.v.2](https://github.com/MKJaswanth/LetsVibeCode.v.2)
+
 ## What is in the catalog
 
 - **134 curated tools across 10 categories**, ordered free and open-source first.
