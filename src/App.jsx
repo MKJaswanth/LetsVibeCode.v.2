@@ -1,605 +1,500 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { tools as initialTools } from './data/tools';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, MotionConfig } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
+import { tools as catalogTools } from './data/tools';
+import { roles } from './data/roles';
+import {
+  DEFAULT_FILTERS,
+  activeChips,
+  compareFreeFirst,
+  filterTools,
+  hasActiveFilters,
+  slugify,
+  sortTools,
+} from './lib/catalog';
+import Header from './components/Header';
+import Hero from './components/Hero';
+import FilterPanel from './components/FilterPanel';
+import Toolbar from './components/Toolbar';
 import ToolCard from './components/ToolCard';
-import ToolModal from './components/ToolModal';
+import Workflows from './components/Workflows';
+import { RoleBanner, WorkflowBanner } from './components/Banners';
+import ToolPanel from './components/ToolPanel';
+import CommandPalette from './components/CommandPalette';
 import SubmitModal from './components/SubmitModal';
-import CategoryTabs from './components/CategoryTabs';
-import FilterBar from './components/FilterBar';
-import SmartStacks from './components/SmartStacks';
-import MenuBar from './components/MenuBar';
+import MobileFilters from './components/MobileFilters';
+import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
-import RoleSwitcher from './components/RoleSwitcher';
-import RolePlaybook from './components/RolePlaybook';
-import { roles as roleOptions, toolMatchesRole } from './data/roles';
-import { Terminal, Star, Github, ArrowRight, Sparkles, Layers } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
 
-const getRoleFromUrl = () => {
-  if (typeof window === 'undefined') return 'all';
-
-  const role = new URLSearchParams(window.location.search).get('role');
-  return roleOptions.some((option) => option.id === role) ? role : 'all';
+const STORAGE = {
+  custom: 'letsvibe_custom_tools',
+  saved: 'letsvibe_bookmarks',
 };
 
+const CATEGORIES = [...new Set(catalogTools.map((tool) => tool.category))];
+
+function readJson(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadCustomTools() {
+  const known = new Set(catalogTools.map((tool) => tool.name.toLowerCase()));
+  return readJson(STORAGE.custom)
+    .filter((tool) => tool && typeof tool.name === 'string' && typeof tool.url === 'string')
+    .filter((tool) => !known.has(tool.name.toLowerCase()))
+    .map((tool) => ({
+      ...tool,
+      desc: tool.desc || '',
+      category: CATEGORIES.includes(tool.category) ? tool.category : CATEGORIES[0],
+      pricing: ['free', 'freemium', 'paid'].includes(tool.pricing) ? tool.pricing : 'freemium',
+      roles: tool.roles?.length ? tool.roles : [],
+      featured: false,
+      isCustom: true,
+    }));
+}
+
+function readUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const role = params.get('role');
+  return {
+    role: roles.some((item) => item.id === role) ? role : 'all',
+    toolSlug: params.get('tool'),
+  };
+}
+
+const findBySlug = (tools, slug) => (slug ? tools.find((tool) => slugify(tool.name) === slug) || null : null);
+
+function Section({ id, title, description, action, children }) {
+  return (
+    <section id={id} className="scroll-mt-32">
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold tracking-tight text-fg">{title}</h2>
+          {description && <p className="mt-0.5 text-sm text-subtle">{description}</p>}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Grid({ children }) {
+  return <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{children}</div>;
+}
+
 export default function App() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState('ALL');
-  const [activeRole, setActiveRole] = useState(getRoleFromUrl);
-  const [activeStack, setActiveStack] = useState(null);
-  const [pricingFilter, setPricingFilter] = useState('all');
+  const [customTools, setCustomTools] = useState(loadCustomTools);
+  const allTools = useMemo(() => [...customTools, ...catalogTools], [customTools]);
+
+  const [saved, setSaved] = useState(() => {
+    const names = new Set([...catalogTools, ...loadCustomTools()].map((tool) => tool.name));
+    return new Set(readJson(STORAGE.saved).filter((name) => names.has(name)));
+  });
+
+  const [filters, setFilters] = useState(() => ({ ...DEFAULT_FILTERS, role: readUrl().role }));
   const [sortBy, setSortBy] = useState('free-first');
-  const [showFavorites, setShowFavorites] = useState(false);
-
-  const [allTools, setAllTools] = useState(initialTools);
-  const [selectedTool, setSelectedTool] = useState(null);
-  const [isSubmitOpen, setIsSubmitOpen] = useState(false);
-
-  const [upvotes, setUpvotes] = useState({});
-  const [userVotes, setUserVotes] = useState(new Set());
-  const [bookmarks, setBookmarks] = useState(new Set());
+  const [openTool, setOpenTool] = useState(() => findBySlug(allTools, readUrl().toolSlug));
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const searchInputRef = useRef(null);
+  const resultsRef = useRef(null);
+  const anyDialogOpen = Boolean(openTool) || paletteOpen || submitOpen || filtersOpen;
 
-  const handleRoleChange = (role) => {
-    setActiveRole(role);
-    setActiveCategory('ALL');
-    setActiveStack(null);
-    setShowFavorites(false);
-
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      if (role === 'all') {
-        url.searchParams.delete('role');
-      } else {
-        url.searchParams.set('role', role);
-      }
-      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
-    }
-  };
-
+  // ---- Persistence -------------------------------------------------------
   useEffect(() => {
-    const handlePopState = () => handleRoleChange(getRoleFromUrl());
-    window.addEventListener('popstate', handlePopState);
+    localStorage.setItem(STORAGE.saved, JSON.stringify([...saved]));
+  }, [saved]);
 
+  // ---- URL: ?role= and ?tool= are shareable --------------------------------
+  useEffect(() => {
     const url = new URL(window.location.href);
-    const roleParam = url.searchParams.get('role');
-    if (roleParam && !roleOptions.some((option) => option.id === roleParam)) {
-      url.searchParams.delete('role');
-      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    const set = (key, value) => (value ? url.searchParams.set(key, value) : url.searchParams.delete(key));
+    set('role', filters.role !== 'all' ? filters.role : null);
+    set('tool', openTool ? slugify(openTool.name) : null);
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    if (next !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+      window.history.replaceState(null, '', next);
     }
-
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [filters.role, openTool]);
 
   useEffect(() => {
-    const role = roleOptions.find((option) => option.id === activeRole);
-    document.title = role ? `${role.label} · vibecode` : 'vibecode · tools worth keeping';
-  }, [activeRole]);
-
-  // Initialize from LocalStorage
-  useEffect(() => {
-    try {
-      // 1. Custom submitted tools
-      const savedCustomTools = JSON.parse(localStorage.getItem('letsvibe_custom_tools') || '[]');
-      const mergedTools = [...savedCustomTools, ...initialTools];
-      const updatedTools = mergedTools.map((t) => ({ ...t, featured: Boolean(t.featured) }));
-      setAllTools(updatedTools);
-
-      // 2. Upvotes
-      const savedVotes = JSON.parse(localStorage.getItem('letsvibe_user_votes') || '[]');
-      const validNames = new Set(updatedTools.map((tool) => tool.name));
-      const validVotes = savedVotes.filter((name) => validNames.has(name));
-      setUserVotes(new Set(validVotes));
-
-      const initialUpvotes = {};
-      updatedTools.forEach((t) => {
-        let hash = 0;
-        for (let i = 0; i < t.name.length; i++) hash = t.name.charCodeAt(i) + ((hash << 5) - hash);
-        initialUpvotes[t.name] = 120 + (Math.abs(hash) % 780);
-        if (validVotes.includes(t.name)) {
-          initialUpvotes[t.name] += 1;
-        }
-      });
-      setUpvotes(initialUpvotes);
-
-      // 3. Bookmarks
-      const savedBookmarks = JSON.parse(localStorage.getItem('letsvibe_bookmarks') || '[]');
-      setBookmarks(new Set(savedBookmarks.filter((name) => validNames.has(name))));
-    } catch (err) {
-      console.error('Initialization error:', err);
-    }
-  }, []);
-
-  // Global Keyboard Shortcut: Focus search with "/" or "Cmd/Ctrl+K" when modals are NOT open
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (selectedTool || isSubmitOpen) return;
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-      if (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
+    const onPopState = () => {
+      const { role, toolSlug } = readUrl();
+      setFilters((prev) => ({ ...prev, role }));
+      setOpenTool(findBySlug(allTools, toolSlug));
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedTool, isSubmitOpen]);
-
-  // Upvote Handler
-  const handleToggleUpvote = (toolName, e) => {
-    if (e) e.stopPropagation();
-    const newVotes = new Set(userVotes);
-    const isRemoving = newVotes.has(toolName);
-
-    if (isRemoving) {
-      newVotes.delete(toolName);
-      setUpvotes((prev) => ({ ...prev, [toolName]: (prev[toolName] || 0) - 1 }));
-    } else {
-      newVotes.add(toolName);
-      setUpvotes((prev) => ({ ...prev, [toolName]: (prev[toolName] || 0) + 1 }));
-    }
-
-    setUserVotes(newVotes);
-    localStorage.setItem('letsvibe_user_votes', JSON.stringify([...newVotes]));
-  };
-
-  // Bookmark Handler
-  const handleToggleBookmark = (toolName, e) => {
-    if (e) e.stopPropagation();
-    const newBookmarks = new Set(bookmarks);
-    if (newBookmarks.has(toolName)) {
-      newBookmarks.delete(toolName);
-    } else {
-      newBookmarks.add(toolName);
-    }
-    setBookmarks(newBookmarks);
-    localStorage.setItem('letsvibe_bookmarks', JSON.stringify([...newBookmarks]));
-  };
-
-  // Submit Tool Handler
-  const handleSubmitTool = (newTool) => {
-    const normalizedTool = {
-      ...newTool,
-      roles: newTool.roles?.length ? newTool.roles : ['founder'],
-    };
-    const savedCustomTools = JSON.parse(localStorage.getItem('letsvibe_custom_tools') || '[]');
-    const updatedCustom = [normalizedTool, ...savedCustomTools];
-    localStorage.setItem('letsvibe_custom_tools', JSON.stringify(updatedCustom));
-
-    setAllTools((prev) => [normalizedTool, ...prev]);
-    setUpvotes((prev) => ({ ...prev, [normalizedTool.name]: 1 }));
-  };
-
-  // Categories list
-  const categories = useMemo(() => {
-    return [...new Set(allTools.map((t) => t.category))];
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   }, [allTools]);
 
-  // Category counts
+  useEffect(() => {
+    const role = roles.find((item) => item.id === filters.role);
+    document.title = openTool
+      ? `${openTool.name} · Let's Vibe Code`
+      : role
+        ? `AI tools for ${role.label.toLowerCase()} · Let's Vibe Code`
+        : "Let's Vibe Code · AI tools worth your time";
+  }, [filters.role, openTool]);
+
+  // ---- Keyboard shortcuts ----------------------------------------------------
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+        return;
+      }
+      if (event.key !== '/' || anyDialogOpen) return;
+      const tag = event.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target.isContentEditable) return;
+      event.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [anyDialogOpen]);
+
+  // ---- Filter helpers ----------------------------------------------------------
+  // Bring the top of the results into view if the user has scrolled past it.
+  const scrollToResults = useCallback((force = false) => {
+    requestAnimationFrame(() => {
+      const el = resultsRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 56;
+      if (force || window.scrollY > top) window.scrollTo({ top, behavior: 'smooth' });
+    });
+  }, []);
+
+  const setFilter = useCallback(
+    (key, value) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+      if (key !== 'query') scrollToResults();
+    },
+    [scrollToResults]
+  );
+
+  const clearFilter = (key) => setFilter(key, DEFAULT_FILTERS[key]);
+  const clearAll = () => {
+    setFilters(DEFAULT_FILTERS);
+    scrollToResults();
+  };
+
+  const applyView = useCallback(
+    (partial) => {
+      setFilters({ ...DEFAULT_FILTERS, ...partial });
+      setOpenTool(null);
+      setPaletteOpen(false);
+      scrollToResults(true);
+    },
+    [scrollToResults]
+  );
+
+  const openToolFromPalette = useCallback((tool) => {
+    setPaletteOpen(false);
+    setOpenTool(tool);
+  }, []);
+
+  const toggleSave = useCallback((name) => {
+    setSaved((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }, []);
+
+  const addCustomTool = (tool) => {
+    const next = [tool, ...readJson(STORAGE.custom)];
+    localStorage.setItem(STORAGE.custom, JSON.stringify(next));
+    setCustomTools(loadCustomTools());
+  };
+
+  // ---- Derived data ---------------------------------------------------------------
+  const results = useMemo(
+    () => sortTools(filterTools(allTools, filters, saved), sortBy),
+    [allTools, filters, saved, sortBy]
+  );
+
+  // Category counts reflect every other active filter, so the numbers match what you'll see.
+  const facetTools = useMemo(
+    () => filterTools(allTools, { ...filters, category: 'all' }, saved),
+    [allTools, filters, saved]
+  );
   const categoryCounts = useMemo(() => {
     const counts = {};
-    allTools.forEach((t) => {
-      counts[t.category] = (counts[t.category] || 0) + 1;
+    facetTools.forEach((tool) => {
+      counts[tool.category] = (counts[tool.category] || 0) + 1;
     });
     return counts;
-  }, [allTools]);
+  }, [facetTools]);
 
-  // Smart Stacks handler
-  const handleSelectStack = (stack) => {
-    if (stack) {
-      handleRoleChange('all');
-      setActiveCategory('ALL');
-      setActiveStack(stack);
-      setSearchTerm('');
-      setPricingFilter('all');
-      setShowFavorites(false);
-    } else {
-      setActiveStack(null);
-    }
+  const freeCount = useMemo(() => allTools.filter((tool) => tool.pricing === 'free').length, [allTools]);
+
+  // One featured pick per category, free first.
+  const starters = useMemo(() => {
+    const seen = new Set();
+    return catalogTools
+      .filter((tool) => tool.featured)
+      .sort(compareFreeFirst)
+      .filter((tool) => (seen.has(tool.category) ? false : seen.add(tool.category)))
+      .slice(0, 6);
+  }, []);
+
+  const existingNames = useMemo(() => new Set(allTools.map((tool) => tool.name.toLowerCase())), [allTools]);
+  const isDefaultView = !hasActiveFilters(filters) && sortBy === 'free-first';
+  const activeFilterCount = activeChips(filters).filter((chip) => chip.key !== 'query').length;
+
+  const card = (tool, showCategory = true) => (
+    <ToolCard
+      key={tool.name}
+      tool={tool}
+      onOpen={setOpenTool}
+      isSaved={saved.has(tool.name)}
+      onToggleSave={toggleSave}
+      showCategory={showCategory}
+    />
+  );
+
+  const panelProps = {
+    filters,
+    setFilter,
+    categories: CATEGORIES,
+    categoryCounts,
+    totalCount: facetTools.length,
+    savedCount: saved.size,
   };
 
-  // Filter & Sort Pipeline
-  const filteredTools = useMemo(() => {
-    let result = allTools;
-
-    // 1. Stack filter
-    if (activeStack) {
-      result = result.filter((t) => activeStack.tools.includes(t.name));
-    }
-
-    // 2. Role filter
-    if (activeRole !== 'all') {
-      result = result.filter((t) => toolMatchesRole(t, activeRole));
-    }
-
-    // 3. Category filter
-    if (activeCategory !== 'ALL') {
-      result = result.filter((t) => t.category === activeCategory);
-    }
-
-    // 4. Pricing filter
-    if (pricingFilter !== 'all') {
-      result = result.filter((t) => t.pricing === pricingFilter);
-    }
-
-    // 5. Favorites filter
-    if (showFavorites) {
-      result = result.filter((t) => bookmarks.has(t.name));
-    }
-
-    // 6. Search keyword
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase();
-      result = result.filter(
-        (t) =>
-          t.name.toLowerCase().includes(q) ||
-          t.desc.toLowerCase().includes(q) ||
-          t.category.toLowerCase().includes(q)
-      );
-    }
-
-    // 7. Sorting. Free and open-source tools first by default.
-    return [...result].sort((a, b) => {
-      if (sortBy === 'free-first') {
-        const pricingRank = { free: 0, freemium: 1, paid: 2 };
-        const priceDifference = (pricingRank[a.pricing] ?? 3) - (pricingRank[b.pricing] ?? 3);
-        if (priceDifference !== 0) return priceDifference;
-        if (a.openSource !== b.openSource) return a.openSource ? -1 : 1;
-        return (upvotes[b.name] || 0) - (upvotes[a.name] || 0);
-      }
-      if (sortBy === 'trending') {
-        const votesA = upvotes[a.name] || 0;
-        const votesB = upvotes[b.name] || 0;
-        return votesB - votesA;
-      }
-      if (sortBy === 'alpha') {
-        return a.name.localeCompare(b.name);
-      }
-      return 0;
-    });
-  }, [allTools, activeStack, activeRole, activeCategory, pricingFilter, showFavorites, searchTerm, sortBy, upvotes, bookmarks]);
-
-  const featuredTools = useMemo(() => {
-    const pricingRank = { free: 0, freemium: 1, paid: 2 };
-    return allTools
-      .filter((t) => t.featured)
-      .sort((a, b) => (pricingRank[a.pricing] ?? 3) - (pricingRank[b.pricing] ?? 3));
-  }, [allTools]);
-
-  const freeToolCount = useMemo(() => allTools.filter((tool) => tool.pricing === 'free').length, [allTools]);
-  const openSourceCount = useMemo(() => allTools.filter((tool) => tool.openSource).length, [allTools]);
-
-  const isDefaultView =
-    activeCategory === 'ALL' &&
-    activeRole === 'all' &&
-    !searchTerm.trim() &&
-    !activeStack &&
-    pricingFilter === 'all' &&
-    !showFavorites &&
-    sortBy === 'free-first';
-
   return (
-    <div className="min-h-screen bg-[#090a0f] text-zinc-100 flex flex-col relative selection:bg-sky-500/20 selection:text-sky-200">
-      {/* Navigation Bar */}
-      <MenuBar onOpenSubmit={() => setIsSubmitOpen(true)} toolCount={allTools.length} />
+    <MotionConfig reducedMotion="user">
+      <div className="flex min-h-screen flex-col">
+        <a
+          href="#results"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-fg focus:px-3 focus:py-2 focus:text-sm focus:text-bg"
+        >
+          Skip to tools
+        </a>
 
-      {/* Hero Section */}
-      <section className="pt-28 pb-10 px-4 sm:px-6 relative z-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-white/[0.08]">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-zinc-300 mb-5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span>CURATED DIRECTORY</span>
-                <span className="text-zinc-600">/</span>
-                <span className="text-zinc-400">FREE-FIRST</span>
-              </div>
-
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.04em] text-white leading-tight mb-4">
-                Tools worth keeping.
-              </h1>
-
-              <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-6 max-w-xl">
-                A hand-picked catalog for building, designing, and shipping software. Start with the free and open-source tools first.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href="#tools"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-zinc-200 transition-colors shadow-sm"
-                >
-                  Browse Tools <ArrowRight size={14} />
-                </a>
-                <a
-                  href="#stacks"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-xs font-medium text-zinc-200 hover:bg-white/[0.08] transition-colors"
-                >
-                  <Layers size={13} className="text-sky-400" />
-                  Explore Stacks
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setIsSubmitOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors"
-                >
-                  Submit a Tool
-                </button>
-              </div>
-            </div>
-
-            {/* Quick Metrics Bar */}
-            <div className="flex items-center gap-3 sm:gap-6 bg-[#0e1118] border border-white/[0.08] rounded-2xl p-4 sm:p-5 shrink-0">
-              <div className="text-left">
-                <div className="text-2xl font-semibold text-white tracking-tight tabular-nums">{allTools.length}</div>
-                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Cataloged</div>
-              </div>
-              <div className="h-8 w-px bg-white/[0.08]" />
-              <div className="text-left">
-                <div className="text-2xl font-semibold text-emerald-400 tracking-tight tabular-nums">{freeToolCount}</div>
-                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Free to Start</div>
-              </div>
-              <div className="h-8 w-px bg-white/[0.08]" />
-              <div className="text-left">
-                <div className="text-2xl font-semibold text-sky-400 tracking-tight tabular-nums">{openSourceCount}</div>
-                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Open Source</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Category Tabs Strip */}
-          <div className="pt-4">
-            <CategoryTabs
-              categories={categories}
-              activeCategory={activeCategory}
-              setActiveCategory={(cat) => {
-                handleRoleChange('all');
-                setActiveCategory(cat);
-                setActiveStack(null);
-              }}
-              categoryCounts={categoryCounts}
-              totalCount={allTools.length}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Role Switcher */}
-      <div id="roles" className="scroll-mt-20">
-        <RoleSwitcher
-          tools={allTools}
-          activeRole={activeRole}
-          onChange={handleRoleChange}
+        <Header
+          savedCount={saved.size}
+          onOpenPalette={() => setPaletteOpen(true)}
+          onOpenSubmit={() => setSubmitOpen(true)}
+          onShowSaved={() => applyView({ saved: true })}
+          onShowWorkflows={() => {
+            setFilters(DEFAULT_FILTERS);
+            setSortBy('free-first');
+            requestAnimationFrame(() =>
+              document.getElementById('workflows')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            );
+          }}
+          onHome={() => {
+            setFilters(DEFAULT_FILTERS);
+            setSortBy('free-first');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
         />
-      </div>
 
-      {/* Role Playbook (Active when a role is selected) */}
-      <RolePlaybook roleId={activeRole} tools={allTools} onSelectTool={setSelectedTool} />
+        <main className="flex-1">
+          <Hero
+            toolCount={allTools.length}
+            freeCount={freeCount}
+            activeRole={filters.role}
+            onOpenPalette={() => setPaletteOpen(true)}
+            onRoleChange={(role) => {
+              setFilters((prev) => ({ ...prev, role, workflow: null }));
+              if (role !== 'all') scrollToResults(true);
+            }}
+          />
 
-      {/* Filter & Search Bar */}
-      <FilterBar
-        searchInputRef={searchInputRef}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        pricingFilter={pricingFilter}
-        setPricingFilter={setPricingFilter}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        showFavorites={showFavorites}
-        setShowFavorites={setShowFavorites}
-        favoriteCount={bookmarks.size}
-        totalResults={filteredTools.length}
-        toolCount={allTools.length}
-      />
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:grid lg:grid-cols-[216px_minmax(0,1fr)] lg:gap-10">
+            <aside className="hidden lg:block" aria-label="Filters">
+              <div className="no-scrollbar sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto pb-10 pt-6">
+                <FilterPanel {...panelProps} />
+              </div>
+            </aside>
 
-      {/* Workflows / Smart Stacks */}
-      <section id="stacks" className="scroll-mt-20">
-        <SmartStacks onSelectStack={handleSelectStack} activeStack={activeStack?.id} />
-      </section>
+            <div id="results" ref={resultsRef} className="min-w-0 scroll-mt-14 pb-24">
+              <Toolbar
+                searchInputRef={searchInputRef}
+                filters={filters}
+                setFilter={setFilter}
+                clearFilter={clearFilter}
+                clearAll={clearAll}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                resultCount={results.length}
+                activeFilterCount={activeFilterCount}
+                onOpenFilters={() => setFiltersOpen(true)}
+              />
 
-      {/* Main Tools Directory */}
-      <main id="tools" className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 flex-grow w-full mb-20 scroll-mt-20">
-        {/* Empty State */}
-        {filteredTools.length === 0 ? (
-          <div className="py-20 text-center flex flex-col items-center justify-center bg-[#0e1118] rounded-2xl p-8 border border-white/[0.08]">
-            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-zinc-400 mb-3">
-              <Terminal size={22} />
-            </div>
-            <h3 className="text-base font-semibold text-white mb-1">No tools match your criteria</h3>
-            <p className="text-xs text-zinc-400 max-w-sm mb-5">
-              Try adjusting your search terms, changing the pricing tier, or resetting filters.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchTerm('');
-                setActiveCategory('ALL');
-                handleRoleChange('all');
-                setActiveStack(null);
-                setPricingFilter('all');
-                setShowFavorites(false);
-              }}
-              className="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 transition-colors"
-            >
-              Reset All Filters
-            </button>
-          </div>
-        ) : isDefaultView ? (
-          /* Default Categorized View */
-          <div className="flex flex-col gap-12">
-            {/* Featured Picks */}
-            {featuredTools.length > 0 && (
-              <section>
-                <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/[0.08]">
-                  <Star size={15} className="text-amber-400 fill-amber-400" />
-                  <h2 className="font-semibold text-sm sm:text-base text-white tracking-tight">
-                    Editor's Starting Points
-                  </h2>
-                  <span className="text-[11px] font-mono text-zinc-500">// HAND-PICKED BENCHMARKS</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {featuredTools.map((tool) => (
-                    <ToolCard
-                      key={tool.name}
-                      tool={tool}
-                      onClick={setSelectedTool}
-                      voteCount={upvotes[tool.name] || 0}
-                      hasVoted={userVotes.has(tool.name)}
-                      onUpvote={handleToggleUpvote}
-                      isBookmarked={bookmarks.has(tool.name)}
-                      onToggleBookmark={handleToggleBookmark}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
+              {/* Category shortcuts for small screens; the sidebar covers this on desktop. */}
+              <div className="fade-right no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:hidden">
+                {['all', ...CATEGORIES].map((category) => {
+                  const active = filters.category === category;
+                  return (
+                    <button
+                      key={category}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setFilter('category', category)}
+                      className={`h-8 shrink-0 rounded-full border px-3.5 text-[13px] transition-colors ${
+                        active ? 'border-fg bg-fg text-bg' : 'border-line text-muted hover:text-fg'
+                      }`}
+                    >
+                      {category === 'all' ? 'All' : category}
+                    </button>
+                  );
+                })}
+              </div>
 
-            {/* Categorized Sections */}
-            {categories.map((category) => {
-              const categoryTools = filteredTools.filter((t) => t.category === category && !t.featured);
-              if (categoryTools.length === 0) return null;
+              {filters.role !== 'all' && (
+                <RoleBanner
+                  roleId={filters.role}
+                  tools={allTools}
+                  onOpenTool={setOpenTool}
+                  onClose={() => setFilter('role', 'all')}
+                />
+              )}
+              {filters.workflow && (
+                <WorkflowBanner
+                  workflowId={filters.workflow}
+                  tools={allTools}
+                  onOpenTool={setOpenTool}
+                  onClose={() => setFilter('workflow', null)}
+                />
+              )}
 
-              return (
-                <section key={category}>
-                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/[0.08]">
-                    <div className="flex items-center gap-2.5">
-                      <h2 className="font-semibold text-sm sm:text-base text-white tracking-tight">{category}</h2>
-                      <span className="text-[11px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.2 rounded border border-sky-500/20">
-                        {categoryTools.length}
-                      </span>
-                    </div>
+              <div className="pt-8">
+                {results.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-line-strong px-6 py-16 text-center">
+                    <h2 className="text-base font-medium text-fg">
+                      {filters.saved && saved.size === 0 ? 'Nothing saved yet' : 'No tools match these filters'}
+                    </h2>
+                    <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
+                      {filters.saved && saved.size === 0
+                        ? 'Use the bookmark icon on any tool to keep it here. Saved tools stay in this browser.'
+                        : 'Try fewer words, or remove a filter or two.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="mt-6 h-9 rounded-lg bg-fg px-4 text-sm font-medium text-bg transition-colors hover:bg-white"
+                    >
+                      {filters.saved && saved.size === 0 ? 'Browse all tools' : 'Clear filters'}
+                    </button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {categoryTools.map((tool) => (
-                      <ToolCard
-                        key={tool.name}
-                        tool={tool}
-                        onClick={setSelectedTool}
-                        voteCount={upvotes[tool.name] || 0}
-                        hasVoted={userVotes.has(tool.name)}
-                        onUpvote={handleToggleUpvote}
-                        isBookmarked={bookmarks.has(tool.name)}
-                        onToggleBookmark={handleToggleBookmark}
-                      />
-                    ))}
+                ) : isDefaultView ? (
+                  <div className="space-y-16">
+                    {customTools.length > 0 && (
+                      <Section title="Added by you" description="Saved in this browser only.">
+                        <Grid>{customTools.map((tool) => card(tool))}</Grid>
+                      </Section>
+                    )}
+
+                    <Section title="Start here" description="A strong first pick in six areas. All free.">
+                      <Grid>{starters.map((tool) => card(tool))}</Grid>
+                    </Section>
+
+                    <Workflows tools={allTools} onSelect={(id) => applyView({ workflow: id })} />
+
+                    {CATEGORIES.map((category) => {
+                      const inCategory = results.filter((tool) => tool.category === category);
+                      if (inCategory.length === 0) return null;
+                      return (
+                        <Section
+                          key={category}
+                          title={category}
+                          description={`${inCategory.length} tools`}
+                          action={
+                            inCategory.length > 6 && (
+                              <button
+                                type="button"
+                                onClick={() => setFilter('category', category)}
+                                className="group inline-flex shrink-0 items-center gap-1 text-sm text-muted transition-colors hover:text-fg"
+                              >
+                                See all
+                                <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+                              </button>
+                            )
+                          }
+                        >
+                          <Grid>{inCategory.slice(0, 6).map((tool) => card(tool, false))}</Grid>
+                        </Section>
+                      );
+                    })}
                   </div>
-                </section>
-              );
-            })}
-          </div>
-        ) : (
-          /* Filtered or Sorted Flat View */
-          <div>
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/[0.08]">
-              <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-sm sm:text-base text-white tracking-tight">
-                  {showFavorites
-                    ? 'Saved Favorites'
-                    : activeStack
-                    ? `${activeStack.name} Workflow`
-                    : activeRole !== 'all'
-                    ? `${roleOptions.find((role) => role.id === activeRole)?.label || 'Role'} Playbook`
-                    : activeCategory !== 'ALL'
-                    ? activeCategory
-                    : 'Search Results'}
-                </h2>
-                <span className="text-[11px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.2 rounded border border-sky-500/20">
-                  {filteredTools.length}
-                </span>
+                ) : (
+                  <Grid>{results.map((tool) => card(tool, filters.category === 'all'))}</Grid>
+                )}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredTools.map((tool) => (
-                <ToolCard
-                  key={tool.name}
-                  tool={tool}
-                  onClick={setSelectedTool}
-                  voteCount={upvotes[tool.name] || 0}
-                  hasVoted={userVotes.has(tool.name)}
-                  onUpvote={handleToggleUpvote}
-                  isBookmarked={bookmarks.has(tool.name)}
-                  onToggleBookmark={handleToggleBookmark}
-                />
-              ))}
-            </div>
           </div>
-        )}
-      </main>
+        </main>
 
-      {/* Developer Footer */}
-      <footer className="border-t border-white/[0.08] bg-[#07080d] py-10 px-4 sm:px-6 relative z-10 text-xs text-zinc-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-              <Terminal size={14} />
-            </div>
-            <div>
-              <span className="font-semibold text-zinc-200">vibecode</span>
-              <p className="text-[11px] text-zinc-500">Tools worth keeping</p>
-            </div>
-          </div>
+        <Footer toolCount={allTools.length} onOpenSubmit={() => setSubmitOpen(true)} />
+        <ScrollToTop />
 
-          <div className="flex items-center gap-6 font-medium text-zinc-400">
-            <a href="#roles" className="hover:text-white transition-colors">
-              Roles
-            </a>
-            <a href="#stacks" className="hover:text-white transition-colors">
-              Workflows
-            </a>
-            <a href="#tools" className="hover:text-white transition-colors">
-              Tools
-            </a>
-            <button
-              type="button"
-              onClick={() => setIsSubmitOpen(true)}
-              className="hover:text-white transition-colors"
-            >
-              Submit
-            </button>
-            <a
-              href="https://github.com/MKJaswanth/LetsVibeCode.v.2"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 hover:text-white transition-colors"
-            >
-              <Github size={13} />
-              GitHub
-            </a>
-          </div>
+        <AnimatePresence>
+          {openTool && (
+            <ToolPanel
+              key="tool-panel"
+              tool={openTool}
+              tools={allTools}
+              isSaved={saved.has(openTool.name)}
+              onToggleSave={toggleSave}
+              onClose={() => setOpenTool(null)}
+              onOpenTool={setOpenTool}
+              onSelectWorkflow={(id) => applyView({ workflow: id })}
+            />
+          )}
+        </AnimatePresence>
 
-          <div className="text-[11px] font-mono text-zinc-500">
-            <span>{freeToolCount} free · {openSourceCount} open source</span>
-          </div>
-        </div>
-      </footer>
+        <AnimatePresence>
+          {paletteOpen && (
+            <CommandPalette
+              key="palette"
+              tools={allTools}
+              categories={CATEGORIES}
+              onClose={() => setPaletteOpen(false)}
+              onOpenTool={openToolFromPalette}
+              onRunAction={applyView}
+            />
+          )}
+        </AnimatePresence>
 
-      {/* Modals */}
-      <AnimatePresence>
-        {selectedTool && (
-          <ToolModal
-            key="tool-modal"
-            tool={selectedTool}
-            onClose={() => setSelectedTool(null)}
-            voteCount={upvotes[selectedTool.name] || 0}
-            hasVoted={userVotes.has(selectedTool.name)}
-            onUpvote={handleToggleUpvote}
-            isBookmarked={bookmarks.has(selectedTool.name)}
-            onToggleBookmark={handleToggleBookmark}
-          />
-        )}
-      </AnimatePresence>
+        <AnimatePresence>
+          {submitOpen && (
+            <SubmitModal
+              key="submit"
+              categories={CATEGORIES}
+              existingNames={existingNames}
+              onClose={() => setSubmitOpen(false)}
+              onSubmitTool={addCustomTool}
+            />
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence>
-        {isSubmitOpen && (
-          <SubmitModal
-            key="submit-modal"
-            isOpen={isSubmitOpen}
-            onClose={() => setIsSubmitOpen(false)}
-            onSubmitTool={handleSubmitTool}
-          />
-        )}
-      </AnimatePresence>
-
-      <ScrollToTop />
-    </div>
+        <AnimatePresence>
+          {filtersOpen && (
+            <MobileFilters
+              key="filters"
+              {...panelProps}
+              onClose={() => setFiltersOpen(false)}
+              resultCount={results.length}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              onClearAll={() => setFilters(DEFAULT_FILTERS)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </MotionConfig>
   );
 }

@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
+import { hostnameOf } from '../lib/catalog';
 
 function getInitials(name) {
   const words = name.replace(/[^a-zA-Z0-9 ]/g, '').trim().split(/\s+/).filter(Boolean);
@@ -6,34 +7,37 @@ function getInitials(name) {
   return (words[0]?.slice(0, 2) || '?').toUpperCase();
 }
 
-export default function ToolIcon({ tool, size = 'md', className = '' }) {
-  const [hasError, setHasError] = useState(false);
-  const hostname = useMemo(() => {
-    try {
-      return new URL(tool.url).hostname.replace(/^www\./, '');
-    } catch {
-      return '';
-    }
-  }, [tool.url]);
+const SIZES = {
+  sm: { box: 'h-8 w-8 rounded-md', img: 'h-5 w-5', text: 'text-[11px]' },
+  md: { box: 'h-10 w-10 rounded-lg', img: 'h-6 w-6', text: 'text-xs' },
+  lg: { box: 'h-14 w-14 rounded-xl', img: 'h-8 w-8', text: 'text-base' },
+};
 
-  const sizes = {
-    sm: 'h-8 w-8 rounded-lg text-[10px]',
-    md: 'h-11 w-11 rounded-xl text-xs',
-    lg: 'h-14 w-14 rounded-2xl text-base',
-  };
+export default function ToolIcon({ tool, size = 'md', className = '' }) {
+  const [failed, setFailed] = useState(false);
+  const hostname = hostnameOf(tool.url);
+  const s = SIZES[size] || SIZES.md;
+  const showImage = hostname && !failed;
 
   return (
-    <div className={`tool-icon ${sizes[size] || sizes.md} ${className}`} aria-hidden="true">
-      {!hasError && hostname ? (
+    <div
+      aria-hidden="true"
+      className={`flex shrink-0 items-center justify-center overflow-hidden ring-1 ring-inset ${
+        showImage ? 'bg-neutral-100 ring-black/5' : 'bg-raised ring-line text-muted'
+      } ${s.box} ${className}`}
+    >
+      {showImage ? (
         <img
           src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=128`}
           alt=""
           loading="lazy"
-          onError={() => setHasError(true)}
-          className="h-7 w-7 object-contain sm:h-8 sm:w-8"
+          decoding="async"
+          onError={() => setFailed(true)}
+          className={`${s.img} object-contain`}
         />
-      ) : null}
-      {hasError || !hostname ? <span>{getInitials(tool.name)}</span> : null}
+      ) : (
+        <span className={`font-medium ${s.text}`}>{getInitials(tool.name)}</span>
+      )}
     </div>
   );
 }

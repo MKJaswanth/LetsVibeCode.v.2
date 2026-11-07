@@ -1,251 +1,246 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowUpRight, Check, X } from 'lucide-react';
+import { useDialog } from '../lib/useDialog';
 
-const CATEGORIES = [
-  'Coding Agents',
-  'Models & Chat',
-  'Visual Creation',
-  'Video & Audio',
-  'Productivity & Knowledge',
-  'UI & Frontend',
-  'Backend & Deploy',
-  'AI Engineering',
-  'Product & Growth',
-  'Research',
-];
+const REPO_ISSUES = 'https://github.com/MKJaswanth/LetsVibeCode.v.2/issues/new';
 
-export default function SubmitModal({ isOpen, onClose, onSubmitTool }) {
-  const [name, setName] = useState('');
-  const [url, setUrl] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [pricing, setPricing] = useState('free');
-  const [desc, setDesc] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+const fieldClass =
+  'h-10 w-full rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-neutral-600 transition-colors hover:border-line-strong focus:border-white/30 focus:outline-none aria-[invalid=true]:border-rose-400/60';
 
-  // Lock background body scroll while modal is open
-  useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, []);
+function normalizeUrl(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const url = new URL(withProtocol);
+    return url.hostname.includes('.') ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
 
-  // Escape key listener to close modal
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+function Field({ id, label, error, children, hint }) {
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1.5 block text-sm text-fg">
+        {label}
+      </label>
+      {children}
+      {error ? (
+        <p id={`${id}-error`} className="mt-1.5 text-[13px] text-rose-300">
+          {error}
+        </p>
+      ) : (
+        hint && <p className="mt-1.5 text-[13px] text-subtle">{hint}</p>
+      )}
+    </div>
+  );
+}
 
-  if (!isOpen) return null;
+export default function SubmitModal({ categories, existingNames, onClose, onSubmitTool }) {
+  const nameRef = useRef(null);
+  const containerRef = useDialog(onClose, { initialFocusRef: nameRef });
+  const [form, setForm] = useState({ name: '', url: '', category: categories[0] || '', pricing: 'free', desc: '' });
+  const [errors, setErrors] = useState({});
+  const [submitted, setSubmitted] = useState(null);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!name.trim()) {
-      setError('Please provide a tool name.');
-      return;
-    }
-
-    if (!url.trim()) {
-      setError('Please provide a valid website URL.');
-      return;
-    }
-
-    let formattedUrl = url.trim();
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
-
-    if (!desc.trim()) {
-      setError('Please provide a brief description.');
-      return;
-    }
-
-    const newTool = {
-      name: name.trim(),
-      url: formattedUrl,
-      category,
-      pricing,
-      desc: desc.trim(),
-      isCustom: true,
-      popular: false,
-    };
-
-    onSubmitTool(newTool);
-    setSuccess(true);
-
-    setTimeout(() => {
-      setSuccess(false);
-      setName('');
-      setUrl('');
-      setDesc('');
-      onClose();
-    }, 1400);
+  const update = (key) => (event) => {
+    setForm((prev) => ({ ...prev, [key]: event.target.value }));
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const next = {};
+    const name = form.name.trim();
+    const url = normalizeUrl(form.url);
+
+    if (!name) next.name = 'Enter the tool’s name.';
+    else if (existingNames.has(name.toLowerCase())) next.name = `${name} is already in the list.`;
+    if (!url) next.url = 'Enter a website address, like example.com.';
+    if (!form.desc.trim()) next.desc = 'Add one sentence about what it does.';
+
+    setErrors(next);
+    if (Object.keys(next).length) {
+      containerRef.current?.querySelector(`#submit-${Object.keys(next)[0]}`)?.focus();
+      return;
+    }
+
+    const tool = {
+      name,
+      url,
+      category: form.category,
+      pricing: form.pricing,
+      desc: form.desc.trim(),
+      isCustom: true,
+      openSource: false,
+    };
+    onSubmitTool(tool);
+    setSubmitted(tool);
+  };
+
+  const issueUrl = submitted
+    ? `${REPO_ISSUES}?${new URLSearchParams({
+        title: `Add tool: ${submitted.name}`,
+        body: `**Name:** ${submitted.name}\n**URL:** ${submitted.url}\n**Category:** ${submitted.category}\n**Pricing:** ${submitted.pricing}\n\n${submitted.desc}`,
+      })}`
+    : '';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
         onClick={onClose}
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        className="absolute inset-0 bg-black/60"
       />
-
-      {/* Modal Window */}
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 15 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 15 }}
+        ref={containerRef}
+        data-dialog
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="submit-title"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 16 }}
         transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="relative w-full max-w-lg bg-[#111116] border border-white/[0.12] rounded-2xl shadow-2xl shadow-black/80 overflow-hidden flex flex-col z-10"
+        className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-line-strong bg-surface shadow-2xl shadow-black sm:rounded-xl"
       >
-        {/* Header */}
-        <div className="p-6 pb-4 border-b border-white/[0.08] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-              <Plus size={16} strokeWidth={2.5} />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg text-white">Add a tool to the list</h3>
-              <p className="text-xs text-zinc-400">Add a new tool directly to your catalog</p>
-            </div>
+        <div className="flex items-start justify-between gap-4 px-6 pb-2 pt-6">
+          <div>
+            <h2 id="submit-title" className="text-lg font-semibold tracking-tight text-fg">
+              {submitted ? `${submitted.name} is in your list` : 'Add a tool'}
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              {submitted
+                ? 'It’s saved in this browser. To add it for everyone, send it to us on GitHub.'
+                : 'It’s saved in this browser, so only you will see it.'}
+            </p>
           </div>
-
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close modal"
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Close"
+            className="-mr-2 -mt-1 rounded-md p-2 text-subtle transition-colors hover:bg-white/[0.06] hover:text-fg"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Form Content */}
-        {success ? (
-          <div className="p-10 flex flex-col items-center justify-center text-center gap-3">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400"
+        {submitted ? (
+          <div className="flex flex-col gap-2 px-6 pb-6 pt-4 sm:flex-row-reverse">
+            <a
+              href={issueUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-fg px-4 text-sm font-medium text-bg transition-colors hover:bg-white"
             >
-              <CheckCircle2 size={32} />
-            </motion.div>
-            <h4 className="text-lg font-bold text-white">Tool Added Successfully!</h4>
-            <p className="text-xs text-zinc-400 max-w-xs">
-              {name} is now saved in your browser and visible in your catalog.
-            </p>
+              Suggest on GitHub <ArrowUpRight size={15} />
+            </a>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-line px-4 text-sm text-muted transition-colors hover:border-line-strong hover:text-fg"
+            >
+              <Check size={15} /> Done
+            </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 text-xs">
-            {error && (
-              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 flex items-center gap-2">
-                <AlertCircle size={14} className="shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Tool Name */}
-            <div className="flex flex-col gap-1.5">
-              <label className="font-medium text-zinc-300">Tool Name</label>
+          <form onSubmit={handleSubmit} noValidate className="space-y-4 px-6 pb-6 pt-4">
+            <Field id="submit-name" label="Name" error={errors.name}>
               <input
-                type="text"
-                placeholder="e.g. Supabase, Claude, Cursor"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="bg-white/[0.04] border border-white/[0.08] focus:border-cyan-500/50 rounded-lg px-3.5 py-2 text-white placeholder-zinc-500 focus:outline-none"
+                ref={nameRef}
+                id="submit-name"
+                value={form.name}
+                onChange={update('name')}
+                placeholder="Supabase"
+                autoComplete="off"
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? 'submit-name-error' : undefined}
+                className={fieldClass}
               />
-            </div>
+            </Field>
 
-            {/* Website URL */}
-            <div className="flex flex-col gap-1.5">
-              <label className="font-medium text-zinc-300">Website URL</label>
+            <Field id="submit-url" label="Website" error={errors.url}>
               <input
-                type="text"
-                placeholder="https://example.com"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="bg-white/[0.04] border border-white/[0.08] focus:border-cyan-500/50 rounded-lg px-3.5 py-2 text-white placeholder-zinc-500 focus:outline-none"
+                id="submit-url"
+                type="url"
+                inputMode="url"
+                value={form.url}
+                onChange={update('url')}
+                placeholder="supabase.com"
+                autoComplete="off"
+                aria-invalid={Boolean(errors.url)}
+                aria-describedby={errors.url ? 'submit-url-error' : undefined}
+                className={fieldClass}
               />
-            </div>
+            </Field>
 
-            {/* Category & Pricing */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="font-medium text-zinc-300">Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="bg-[#181820] border border-white/[0.08] focus:border-cyan-500/50 rounded-lg px-3 py-2 text-white focus:outline-none cursor-pointer"
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="submit-category" label="Category">
+                <select id="submit-category" value={form.category} onChange={update('category')} className={fieldClass}>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
                     </option>
                   ))}
                 </select>
-              </div>
+              </Field>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="font-medium text-zinc-300">Pricing Tier</label>
-                <div className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.08] p-1 rounded-lg">
+              <fieldset>
+                <legend className="mb-1.5 block text-sm text-fg">Pricing</legend>
+                <div className="grid h-10 grid-cols-3 gap-1 rounded-lg border border-line bg-bg p-1">
                   {['free', 'freemium', 'paid'].map((tier) => (
-                    <button
+                    <label
                       key={tier}
-                      type="button"
-                      onClick={() => setPricing(tier)}
-                      className={`flex-1 py-1 rounded capitalize font-medium transition-colors ${
-                        pricing === tier
-                          ? 'bg-white text-zinc-950 font-semibold'
-                          : 'text-zinc-400 hover:text-white'
+                      className={`flex cursor-pointer items-center justify-center rounded-md text-[13px] capitalize transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-white/70 ${
+                        form.pricing === tier ? 'bg-raised text-fg ring-1 ring-line-strong' : 'text-subtle hover:text-fg'
                       }`}
                     >
+                      <input
+                        type="radio"
+                        name="pricing"
+                        value={tier}
+                        checked={form.pricing === tier}
+                        onChange={update('pricing')}
+                        className="sr-only"
+                      />
                       {tier}
-                    </button>
+                    </label>
                   ))}
                 </div>
-              </div>
+              </fieldset>
             </div>
 
-            {/* Description */}
-            <div className="flex flex-col gap-1.5">
-              <label className="font-medium text-zinc-300">Short Description</label>
+            <Field id="submit-desc" label="What it does" error={errors.desc} hint="One sentence is enough.">
               <textarea
-                rows={2}
-                placeholder="One sentence describing what makes this tool awesome..."
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-                className="bg-white/[0.04] border border-white/[0.08] focus:border-cyan-500/50 rounded-lg px-3.5 py-2 text-white placeholder-zinc-500 focus:outline-none resize-none"
+                id="submit-desc"
+                rows={3}
+                value={form.desc}
+                onChange={update('desc')}
+                placeholder="Postgres, auth and storage with a free tier."
+                aria-invalid={Boolean(errors.desc)}
+                aria-describedby={errors.desc ? 'submit-desc-error' : undefined}
+                className={`${fieldClass} h-auto resize-none py-2.5 leading-relaxed`}
               />
-            </div>
+            </Field>
 
-            {/* Submit Buttons */}
-            <div className="pt-2 flex items-center justify-end gap-2.5">
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                className="h-10 rounded-lg px-4 text-sm text-muted transition-colors hover:text-fg"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 transition-colors shadow-sm"
+                className="h-10 rounded-lg bg-fg px-4 text-sm font-medium text-bg transition-colors hover:bg-white"
               >
-                Add Tool
+                Add tool
               </button>
             </div>
           </form>

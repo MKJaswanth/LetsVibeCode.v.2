@@ -1,144 +1,75 @@
 import React from 'react';
-import { ExternalLink, Flame, Star, GitBranch, ArrowUp } from 'lucide-react';
+import { ArrowUpRight, Bookmark } from 'lucide-react';
 import ToolIcon from './ToolIcon';
+import { PRICING_LABELS, hostnameOf } from '../lib/catalog';
 
-const pricingConfig = {
-  free: {
-    label: 'FREE',
-    className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  },
-  freemium: {
-    label: 'FREEMIUM',
-    className: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
-  },
-  paid: {
-    label: 'PAID',
-    className: 'bg-zinc-700/30 text-zinc-300 border-white/10',
-  },
-};
+export function PricingTag({ pricing, openSource }) {
+  return (
+    <div className="flex items-center gap-3 text-[13px]">
+      <span className={`inline-flex items-center gap-1.5 ${pricing === 'free' ? 'text-emerald-400' : 'text-muted'}`}>
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            pricing === 'free' ? 'bg-emerald-400' : pricing === 'freemium' ? 'bg-amber-300/80' : 'bg-neutral-500'
+          }`}
+        />
+        {PRICING_LABELS[pricing] || 'Freemium'}
+      </span>
+      {openSource && <span className="text-muted">Open source</span>}
+    </div>
+  );
+}
 
-export default function ToolCard({
-  tool,
-  onClick,
-  voteCount = 0,
-  hasVoted = false,
-  onUpvote,
-  isBookmarked = false,
-  onToggleBookmark,
-}) {
-  const pricing = pricingConfig[tool.pricing] || pricingConfig.freemium;
+export default function ToolCard({ tool, onOpen, isSaved, onToggleSave, showCategory = true }) {
+  // Always show a second line so cards in a row line up; fall back to the website's domain.
+  const meta =
+    [showCategory ? tool.category : null, tool.surface].filter(Boolean).join(' · ') || hostnameOf(tool.url);
 
   return (
-    <div
-      onClick={() => onClick(tool)}
-      className={`tool-card rounded-2xl p-5 flex flex-col justify-between h-full cursor-pointer group transition-all duration-200 border ${
-        tool.featured
-          ? 'border-amber-500/30 bg-[#10131c]'
-          : 'border-white/[0.07] bg-[#0e1118]'
-      }`}
-    >
-      <div>
-        {/* Card Header: Icon, Name, Category, Badges */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3">
-            <ToolIcon tool={tool} size="md" />
-
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm sm:text-base text-white group-hover:text-sky-300 transition-colors tracking-tight">
-                  {tool.name}
-                </h3>
-                {tool.isCustom && (
-                  <span className="px-1.5 py-0.2 rounded bg-purple-500/20 border border-purple-500/30 text-[10px] font-mono text-purple-300">
-                    User
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 mt-0.5">
-                <span>{tool.category}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Badges: Pricing & Open Source */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {tool.openSource && (
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-medium">
-                OSS
-              </span>
-            )}
-            <span
-              className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-medium border ${pricing.className}`}
+    <article className="group relative flex h-full flex-col rounded-xl border border-line bg-surface p-5 transition-colors duration-150 hover:border-line-strong hover:bg-raised">
+      <div className="flex items-start gap-3.5">
+        <ToolIcon tool={tool} />
+        <div className="min-w-0 flex-1 pr-14">
+          <h3 className="truncate text-[15px] font-medium text-fg">
+            <button
+              type="button"
+              onClick={() => onOpen(tool)}
+              className="text-left after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-white/70"
             >
-              {pricing.label}
-            </span>
-          </div>
+              {tool.name}
+            </button>
+          </h3>
+          <p className="mt-0.5 truncate text-[13px] text-subtle">{tool.isCustom ? 'Added by you' : meta}</p>
         </div>
-
-        {/* Description */}
-        <p className="text-zinc-400 text-xs sm:text-[13px] leading-relaxed line-clamp-2 mb-4">
-          {tool.desc}
-        </p>
       </div>
 
-      {/* Card Action Row */}
-      <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs mt-auto">
-        {/* Left: Upvote + Bookmark */}
-        <div className="flex items-center gap-1.5">
-          {/* Upvote Pill */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onUpvote(tool.name, e);
-            }}
-            title={hasVoted ? 'Remove upvote' : 'Upvote tool'}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all duration-150 border text-xs ${
-              hasVoted
-                ? 'bg-rose-500/15 text-rose-300 border-rose-500/30 font-medium'
-                : 'bg-white/[0.03] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.07] border-white/[0.06]'
-            }`}
-          >
-            <ArrowUp
-              size={13}
-              className={hasVoted ? 'text-rose-400 stroke-[2.5]' : 'text-zinc-400'}
-            />
-            <span className="font-mono text-xs tabular-nums font-medium">{voteCount}</span>
-          </button>
-
-          {/* Bookmark Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleBookmark(tool.name, e);
-            }}
-            title={isBookmarked ? 'Remove from Saved' : 'Save tool'}
-            className={`p-1.5 rounded-lg transition-all duration-150 border ${
-              isBookmarked
-                ? 'bg-amber-400/15 text-amber-300 border-amber-400/30'
-                : 'bg-white/[0.03] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.07] border-white/[0.06]'
-            }`}
-          >
-            <Star
-              size={13}
-              className={isBookmarked ? 'fill-amber-400 text-amber-400' : ''}
-            />
-          </button>
-        </div>
-
-        {/* Right: Visit Link */}
+      <div className="absolute right-3 top-3 z-10 flex items-center gap-0.5">
+        <button
+          type="button"
+          onClick={() => onToggleSave(tool.name)}
+          aria-pressed={isSaved}
+          aria-label={isSaved ? `Remove ${tool.name} from saved` : `Save ${tool.name}`}
+          className={`rounded-md p-2 transition-colors hover:bg-white/[0.06] ${
+            isSaved ? 'text-fg' : 'text-subtle hover:text-fg'
+          }`}
+        >
+          <Bookmark size={16} className={isSaved ? 'fill-current' : ''} />
+        </button>
         <a
           href={tool.url}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center gap-1 text-zinc-400 hover:text-white transition-colors py-1 px-2 rounded-md hover:bg-white/5 font-medium text-xs"
+          aria-label={`Open ${tool.name} website`}
+          className="rounded-md p-2 text-subtle transition-colors hover:bg-white/[0.06] hover:text-fg"
         >
-          <span>Visit</span>
-          <ExternalLink size={12} />
+          <ArrowUpRight size={16} />
         </a>
       </div>
-    </div>
+
+      <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-muted">{tool.desc}</p>
+
+      <div className="mt-auto pt-4">
+        <PricingTag pricing={tool.pricing} openSource={tool.openSource} />
+      </div>
+    </article>
   );
 }
